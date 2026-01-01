@@ -3,12 +3,8 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
+import { selectSubstrateUtilization } from '../../state/selectors';
 import { memo } from 'react';
-
-// Select only the data we need to prevent unnecessary re-renders
-function useSubstrateData() {
-  return useSimulationStore((state) => state?.state?.energy?.substrateUtilization);
-}
 
 // Get metabolic state description and color
 function getStateInfo(state: string) {
@@ -43,7 +39,8 @@ function getStateInfo(state: string) {
 }
 
 const SubstrateUtilization = memo(function SubstrateUtilization() {
-  const substrateUtilization = useSubstrateData();
+  // Use stable selector - only re-renders when substrate utilization changes
+  const substrateUtilization = useSimulationStore(selectSubstrateUtilization);
 
   if (!substrateUtilization) return null;
 

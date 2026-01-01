@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
+import { selectActivities } from '../../state/selectors';
 import { memo, useMemo } from 'react';
 
 // Extended interfaces to include 'name' property added by demo mode
@@ -53,15 +54,14 @@ const typeColors = {
 };
 
 const ActivityLog = memo(function ActivityLog() {
-  const { state } = useSimulationStore();
+  // Use stable selector - only re-renders when activities change
+  const { meals, exercises, sleep } = useSimulationStore(selectActivities);
 
   const activities = useMemo(() => {
-    if (!state) return [];
-
     const entries: ActivityLogEntry[] = [];
 
     // Add meals
-    state.recentMeals.forEach((meal: MealWithName) => {
+    meals.forEach((meal: MealWithName) => {
       const timestamp = typeof meal.time === 'string' ? meal.time : meal.time.toISOString();
       const macros = meal.totalMacros;
       const calories = macros
@@ -81,7 +81,7 @@ const ActivityLog = memo(function ActivityLog() {
     });
 
     // Add exercises
-    state.recentExercises.forEach((exercise: ExerciseWithName) => {
+    exercises.forEach((exercise: ExerciseWithName) => {
       const timestamp = typeof exercise.startTime === 'string'
         ? exercise.startTime
         : exercise.startTime.toISOString();
@@ -101,18 +101,18 @@ const ActivityLog = memo(function ActivityLog() {
     });
 
     // Add sleep
-    state.recentSleep.forEach((sleep: SleepEntry) => {
-      const timestamp = typeof sleep.endTime === 'string'
-        ? sleep.endTime
-        : sleep.endTime.toISOString();
-      const cycles = sleep.cycles || Math.floor(sleep.duration * 1.5);
+    sleep.forEach((sleepEntry: SleepEntry) => {
+      const timestamp = typeof sleepEntry.endTime === 'string'
+        ? sleepEntry.endTime
+        : sleepEntry.endTime.toISOString();
+      const cycles = sleepEntry.cycles || Math.floor(sleepEntry.duration * 1.5);
 
       entries.push({
-        id: sleep.id,
+        id: sleepEntry.id,
         timestamp,
         type: 'sleep',
         description: 'Sleep',
-        details: `${sleep.duration}h • Quality ${(sleep.quality * 100).toFixed(0)}% • ${cycles} cycles`,
+        details: `${sleepEntry.duration}h • Quality ${(sleepEntry.quality * 100).toFixed(0)}% • ${cycles} cycles`,
         icon: '😴',
       });
     });
@@ -121,7 +121,7 @@ const ActivityLog = memo(function ActivityLog() {
     return entries.sort((a, b) =>
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     ).slice(0, 10); // Show last 10 activities
-  }, [state]);
+  }, [meals, exercises, sleep]);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);

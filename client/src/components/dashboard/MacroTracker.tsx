@@ -3,15 +3,12 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
+import { selectEnergy } from '../../state/selectors';
 import { memo } from 'react';
 
-// Select only the data we need to prevent unnecessary re-renders
-function useEnergyData() {
-  return useSimulationStore((state) => state?.state?.energy);
-}
-
 const MacroTracker = memo(function MacroTracker() {
-  const energy = useEnergyData();
+  // Use stable selector - only re-renders when energy data changes
+  const energy = useSimulationStore(selectEnergy);
 
   if (!energy) return null;
 

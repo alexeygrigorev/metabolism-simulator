@@ -3,15 +3,12 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
+import { selectMuscle } from '../../state/selectors';
 import { memo } from 'react';
 
-// Select only the data we need to prevent unnecessary re-renders
-function useMuscleData() {
-  return useSimulationStore((state) => state?.state?.muscle);
-}
-
 const MusclePanel = memo(function MusclePanel() {
-  const muscle = useMuscleData();
+  // Use stable selector reference - only re-renders when muscle data changes
+  const muscle = useSimulationStore(selectMuscle);
 
   if (!muscle) return null;
 

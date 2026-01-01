@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
+import { selectBloodGlucose } from '../../state/selectors';
 import { memo, useMemo } from 'react';
 
 // Glucose zone definitions (mg/dL)
@@ -14,13 +15,9 @@ const GLUCOSE_ZONES = {
   veryHigh: { min: 200, max: 400, label: 'Very High', color: 'bg-red-600', description: 'Diabetic range' },
 } as const;
 
-// Select only blood glucose data
-function useBloodGlucoseData() {
-  return useSimulationStore((state) => state?.state?.energy?.bloodGlucose);
-}
-
 const BloodGlucosePanel = memo(function BloodGlucosePanel() {
-  const bloodGlucose = useBloodGlucoseData();
+  // Use stable selector - only re-renders when blood glucose changes
+  const bloodGlucose = useSimulationStore(selectBloodGlucose);
 
   if (!bloodGlucose) {
     return (

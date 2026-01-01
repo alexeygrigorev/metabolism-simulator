@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
+import { selectHormoneHistory, selectState } from '../../state/selectors';
 import { memo, useMemo, useState } from 'react';
 import { HormoneName } from '@metabol-sim/shared';
 
@@ -26,7 +27,9 @@ const HORMONE_CONFIGS: HormoneConfig[] = [
 ];
 
 const HormoneTimeSeries = memo(function HormoneTimeSeries() {
-  const { hormoneHistory, state } = useSimulationStore();
+  // Use stable selectors - only re-renders when hormone history or state changes
+  const hormoneHistory = useSimulationStore(selectHormoneHistory);
+  const state = useSimulationStore(selectState);
   const [enabledHormones, setEnabledHormones] = useState<Set<HormoneName>>(
     new Set(['insulin', 'glucagon', 'cortisol'] as HormoneName[])
   );

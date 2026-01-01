@@ -3,27 +3,37 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
+import { createHormonePanelSelector } from '../../state/selectors';
+import type { SimulationStore } from '../../state/store';
 import Sparkline from '../charts/Sparkline';
 import HormoneTooltip from '../ui/HormoneTooltip';
 import { memo, useMemo, useEffect, useState } from 'react';
+import type { HormoneName } from '@metabol-sim/shared';
 
 interface HormonePanelProps {
-  hormone: keyof import('@metabol-sim/shared').HormonalState;
+  hormone: HormoneName;
   label: string;
   color: string;
   unit: string;
 }
 
-// Select only the data we need for this specific hormone
-function useHormoneData(hormone: keyof import('@metabol-sim/shared').HormonalState) {
-  return useSimulationStore((state) => ({
-    data: state?.state?.hormones[hormone],
-    history: state?.hormoneHistory[hormone],
-  }));
-}
+type HormonePanelSelector = (state: SimulationStore) => {
+  data: import('@metabol-sim/shared').HormonalState[HormoneName] | undefined;
+  history: number[] | undefined;
+};
+
+// Cache selectors for each hormone to avoid recreating on every render
+const hormoneSelectorCache = new Map<HormoneName, HormonePanelSelector>();
 
 const HormonePanel = memo(function HormonePanel({ hormone, label, color, unit }: HormonePanelProps) {
-  const { data: hormoneData, history } = useHormoneData(hormone);
+  // Get or create a stable selector for this specific hormone
+  if (!hormoneSelectorCache.has(hormone)) {
+    hormoneSelectorCache.set(hormone, createHormonePanelSelector(hormone) as HormonePanelSelector);
+  }
+  const selectHormoneData = hormoneSelectorCache.get(hormone)!;
+
+  // Use stable selector - only re-renders when this specific hormone changes
+  const { data: hormoneData, history } = useSimulationStore(selectHormoneData);
   const [pulseActive, setPulseActive] = useState(false);
   const [previousValue, setPreviousValue] = useState<number | null>(null);
 

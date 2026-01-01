@@ -17,7 +17,7 @@ import {
 import { useAchievementsStore } from './achievementsStore';
 
 // History for sparkline visualization (limited to 20 points for performance)
-interface HormoneHistory {
+export interface HormoneHistory {
   insulin: number[];
   glucagon: number[];
   cortisol: number[];
@@ -66,6 +66,8 @@ interface SimulationStore {
   removeToast: (id: string) => void;
   reset: () => void;
 }
+
+export type { SimulationStore };
 
 const API_BASE = '/api';
 
