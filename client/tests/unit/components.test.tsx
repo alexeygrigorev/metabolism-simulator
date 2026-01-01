@@ -24,6 +24,8 @@ import {
   type Food
 } from '../../src/data/foodDatabase';
 import HormoneEducationHub from '../../src/components/education/HormoneEducationHub';
+import MetabolicInsightsDashboard from '../../src/components/insights/MetabolicInsightsDashboard';
+import { useMetabolicInsights } from '../../src/hooks/useMetabolicInsights';
 import '@testing-library/jest-dom';
 
 // Component that throws an error for testing ErrorBoundary
@@ -1842,5 +1844,134 @@ describe('Hormone Education Data', () => {
 
   it('should have at least 8 hormones in education database', () => {
     expect(Object.keys(HORMONE_EDUCATION).length).toBeGreaterThanOrEqual(8);
+  });
+});
+
+// ============================================================================
+// METABOLIC INSIGHTS DASHBOARD TESTS
+// ============================================================================
+
+describe('MetabolicInsightsDashboard Component', () => {
+  beforeEach(() => {
+    useSimulationStore.getState().reset();
+  });
+
+  it('should render modal when open', () => {
+    render(<MetabolicInsightsDashboard onClose={() => {}} />);
+
+    expect(screen.getByText('Metabolic Insights')).toBeInTheDocument();
+    expect(screen.getByText('Personalized health analysis')).toBeInTheDocument();
+  });
+
+  it('should have all tab buttons', () => {
+    render(<MetabolicInsightsDashboard onClose={() => {}} />);
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.some(btn => btn.textContent?.includes('Overview'))).toBe(true);
+    expect(buttons.some(btn => btn.textContent?.includes('Biomarkers'))).toBe(true);
+    expect(buttons.some(btn => btn.textContent?.includes('Lifestyle'))).toBe(true);
+    expect(buttons.some(btn => btn.textContent?.includes('All Insights'))).toBe(true);
+  });
+
+  it('should show overview tab by default', () => {
+    render(<MetabolicInsightsDashboard onClose={() => {}} />);
+
+    expect(screen.getByText('Your Metabolic Health Insights')).toBeInTheDocument();
+    expect(screen.getByText(/Overall Metabolic Score/)).toBeInTheDocument();
+  });
+
+  it('should close when close button is clicked', () => {
+    const handleClose = vi.fn();
+    render(<MetabolicInsightsDashboard onClose={handleClose} />);
+
+    const closeButton = screen.getByText('×');
+    fireEvent.click(closeButton);
+
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('should display metabolic score card', () => {
+    render(<MetabolicInsightsDashboard onClose={() => {}} />);
+
+    expect(screen.getByText(/Overall Metabolic Score/)).toBeInTheDocument();
+  });
+});
+
+// ============================================================================
+// METABOLIC INSIGHTS HOOK TESTS
+// ============================================================================
+
+describe('useMetabolicInsights Hook', () => {
+  beforeEach(() => {
+    useSimulationStore.getState().reset();
+  });
+
+  it('should return metabolic score', () => {
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    expect(result.current.metabolicScore).toBeDefined();
+    expect(result.current.metabolicScore.overall).toBeGreaterThanOrEqual(0);
+    expect(result.current.metabolicScore.overall).toBeLessThanOrEqual(100);
+  });
+
+  it('should have all category scores', () => {
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    const { categories } = result.current.metabolicScore;
+    expect(categories.hormonal).toBeGreaterThanOrEqual(0);
+    expect(categories.metabolic).toBeGreaterThanOrEqual(0);
+    expect(categories.lifestyle).toBeGreaterThanOrEqual(0);
+    expect(categories.recovery).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should return biomarker trends', () => {
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    expect(result.current.biomarkerTrends).toBeDefined();
+    expect(Array.isArray(result.current.biomarkerTrends)).toBe(true);
+  });
+
+  it('should return insights array', () => {
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    expect(result.current.insights).toBeDefined();
+    expect(Array.isArray(result.current.insights)).toBe(true);
+  });
+
+  it('should return lifestyle impacts', () => {
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    expect(result.current.lifestyleImpacts).toBeDefined();
+    expect(Array.isArray(result.current.lifestyleImpacts)).toBe(true);
+  });
+
+  it('should have trend information', () => {
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    const trend = result.current.metabolicScore.trend;
+    expect(['improving', 'stable', 'declining']).toContain(trend);
+  });
+
+  it('should have loading state indicator', () => {
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    expect(result.current.isLoading).toBeDefined();
+  });
+
+  it('should provide default score for empty state', () => {
+    // Reset store to clear state
+    act(() => {
+      useSimulationStore.getState().reset();
+    });
+
+    // The hook should handle empty state and return default values
+    const { result } = renderHook(() => useMetabolicInsights());
+
+    // When state is empty, the hook returns default values via the !state check
+    expect(result.current).toBeDefined();
+    expect(result.current.metabolicScore).toBeDefined();
+    expect(result.current.biomarkerTrends).toEqual([]);
+    expect(result.current.insights).toEqual([]);
+    expect(result.current.lifestyleImpacts).toEqual([]);
   });
 });

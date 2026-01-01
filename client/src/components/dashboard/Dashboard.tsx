@@ -25,6 +25,7 @@ import BloodGlucosePanel from './BloodGlucosePanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import HormoneEducationHub from '../education/HormoneEducationHub';
+import MetabolicInsightsDashboard from '../insights/MetabolicInsightsDashboard';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
 
 type ViewMode = 'dashboard' | 'scenarios';
@@ -34,15 +35,25 @@ const DashboardHeader = memo(function DashboardHeader({
   activeScenario,
   onScenarioToggle,
   onEducationOpen,
+  onInsightsOpen,
 }: {
   activeScenario: Scenario | null;
   onScenarioToggle: () => void;
   onEducationOpen: () => void;
+  onInsightsOpen: () => void;
 }) {
   return (
     <div className="flex items-center justify-between flex-wrap gap-4">
       <ActionButtons />
       <div className="flex items-center gap-2">
+        <button
+          onClick={onInsightsOpen}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors flex items-center gap-2"
+          title="View personalized metabolic health insights"
+        >
+          <span>📊</span>
+          <span className="hidden sm:inline">Insights</span>
+        </button>
         <button
           onClick={onEducationOpen}
           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded transition-colors flex items-center gap-2"
@@ -136,6 +147,7 @@ function Dashboard() {
   const { activeScenario } = useScenarioStore();
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [showEducationHub, setShowEducationHub] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
 
   if (!state) {
     return (
@@ -175,6 +187,7 @@ function Dashboard() {
         activeScenario={activeScenario}
         onScenarioToggle={() => setViewMode('scenarios')}
         onEducationOpen={() => setShowEducationHub(true)}
+        onInsightsOpen={() => setShowInsights(true)}
       />
 
       {/* Top row - Profile + Quick Stats */}
@@ -211,6 +224,11 @@ function Dashboard() {
     {/* Education Hub Modal */}
     {showEducationHub && (
       <HormoneEducationHub onClose={() => setShowEducationHub(false)} />
+    )}
+
+    {/* Metabolic Insights Modal */}
+    {showInsights && (
+      <MetabolicInsightsDashboard onClose={() => setShowInsights(false)} />
     )}
   </>
   );
