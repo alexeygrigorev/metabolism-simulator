@@ -30,6 +30,7 @@ import HealthAlertsPanel from './HealthAlertsPanel';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
 import { useHealthAlerts } from '../../hooks/useHealthAlerts';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
+import { Skeleton, ProfileCardSkeleton, HormonePanelSkeleton, ChartSkeleton, CardSkeleton } from '../ui/Skeleton';
 
 // Code splitting for heavy modal components - loaded only when needed
 const ExerciseBuilder = lazy(() => import('./ExerciseBuilder'));
@@ -235,17 +236,44 @@ const ChartsSection = memo(function ChartsSection() {
 });
 
 function Dashboard() {
-  const { state } = useSimulationStore();
+  const { state, loading } = useSimulationStore();
   const { activeScenario } = useScenarioStore();
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [showEducationHub, setShowEducationHub] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [showExerciseBuilder, setShowExerciseBuilder] = useState(false);
 
-  if (!state) {
+  // Loading skeleton
+  if (loading || !state) {
     return (
-      <div className="text-center py-12">
-        <p className="text-slate-400">No simulation state</p>
+      <div className="space-y-6 animate-pulse">
+        {/* Profile and quick stats skeletons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <ProfileCardSkeleton />
+          <ProfileCardSkeleton />
+          <ProfileCardSkeleton />
+          <ProfileCardSkeleton />
+        </div>
+
+        {/* Hormone panels skeletons */}
+        <div>
+          <Skeleton width={200} height={28} className="mb-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+              <HormonePanelSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+
+        {/* Chart skeletons */}
+        <ChartSkeleton height={200} />
+        <ChartSkeleton height={200} />
+
+        {/* Activity section skeletons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
       </div>
     );
   }
