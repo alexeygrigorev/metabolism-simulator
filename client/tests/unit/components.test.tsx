@@ -23,6 +23,7 @@ import {
   getHighProteinFoods,
   type Food
 } from '../../src/data/foodDatabase';
+import HormoneEducationHub from '../../src/components/education/HormoneEducationHub';
 import '@testing-library/jest-dom';
 
 // Component that throws an error for testing ErrorBoundary
@@ -1671,5 +1672,175 @@ describe('Food Database', () => {
 
   it('should include dairy products', () => {
     expect(FOOD_DATABASE.some(f => f.id === 'greekYogurt')).toBe(true);
+  });
+});
+
+// ============================================================================
+// HORMONE EDUCATION HUB TESTS
+// ============================================================================
+
+describe('HormoneEducationHub Component', () => {
+  beforeEach(() => {
+    useSimulationStore.getState().reset();
+  });
+
+  it('should render modal when open', () => {
+    render(<HormoneEducationHub onClose={() => {}} />);
+
+    expect(screen.getByText('Hormone Education Hub')).toBeInTheDocument();
+    expect(screen.getByText('Overview')).toBeInTheDocument();
+  });
+
+  it('should show overview tab by default', () => {
+    render(<HormoneEducationHub onClose={() => {}} />);
+
+    expect(screen.getByText('Welcome to the Hormone Education Hub')).toBeInTheDocument();
+    expect(screen.getByText('Your Current Hormonal Status')).toBeInTheDocument();
+  });
+
+  it('should have all tab buttons', () => {
+    render(<HormoneEducationHub onClose={() => {}} />);
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.some(btn => btn.textContent?.includes('Overview'))).toBe(true);
+    expect(buttons.some(btn => btn.textContent?.includes('Explorer'))).toBe(true);
+    expect(buttons.some(btn => btn.textContent?.includes('Symptom Checker'))).toBe(true);
+    expect(buttons.some(btn => btn.textContent?.includes('Relationships'))).toBe(true);
+  });
+
+  it('should close when close button is clicked', () => {
+    const handleClose = vi.fn();
+    render(<HormoneEducationHub onClose={handleClose} />);
+
+    const closeButton = screen.getByText('×');
+    fireEvent.click(closeButton);
+
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('should display hormone categories', () => {
+    render(<HormoneEducationHub onClose={() => {}} />);
+
+    expect(screen.getByText(/Hormone Categories/)).toBeInTheDocument();
+    expect(screen.getByText(/storage/i)).toBeInTheDocument();
+    expect(screen.getByText(/anabolic/i)).toBeInTheDocument();
+  });
+
+  it('should show learning tips', () => {
+    render(<HormoneEducationHub onClose={() => {}} />);
+
+    expect(screen.getByText(/Did You Know/)).toBeInTheDocument();
+  });
+});
+
+// ============================================================================
+// HORMONE EDUCATION DATA TESTS
+// ============================================================================
+
+describe('Hormone Education Data', () => {
+  it('should have education data for all tracked hormones', () => {
+    const hormones = Object.keys(HORMONE_EDUCATION);
+    expect(hormones.length).toBeGreaterThan(0);
+    expect(hormones).toContain('insulin');
+    expect(hormones).toContain('cortisol');
+    expect(hormones).toContain('testosterone');
+  });
+
+  it('should have all required properties for each hormone', () => {
+    Object.values(HORMONE_EDUCATION).forEach(hormone => {
+      expect(hormone).toHaveProperty('id');
+      expect(hormone).toHaveProperty('name');
+      expect(hormone).toHaveProperty('abbreviation');
+      expect(hormone).toHaveProperty('category');
+      expect(hormone).toHaveProperty('description');
+      expect(hormone).toHaveProperty('function');
+      expect(hormone).toHaveProperty('factorsThatIncrease');
+      expect(hormone).toHaveProperty('factorsThatDecrease');
+      expect(hormone).toHaveProperty('symptomsOfHigh');
+      expect(hormone).toHaveProperty('symptomsOfLow');
+      expect(hormone).toHaveProperty('normalRange');
+    });
+  });
+
+  it('should have valid normal ranges', () => {
+    Object.values(HORMONE_EDUCATION).forEach(hormone => {
+      expect(hormone.normalRange.min).toBeLessThan(hormone.normalRange.max);
+    });
+  });
+
+  it('should have non-empty factor lists', () => {
+    Object.values(HORMONE_EDUCATION).forEach(hormone => {
+      expect(hormone.factorsThatIncrease.length).toBeGreaterThan(0);
+      expect(hormone.factorsThatDecrease.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should have non-empty symptom lists', () => {
+    Object.values(HORMONE_EDUCATION).forEach(hormone => {
+      expect(hormone.symptomsOfHigh.length).toBeGreaterThan(0);
+      expect(hormone.symptomsOfLow.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should have related hormones defined', () => {
+    Object.values(HORMONE_EDUCATION).forEach(hormone => {
+      expect(Array.isArray(hormone.relatedHormones)).toBe(true);
+    });
+  });
+
+  it('should have valid relationship types', () => {
+    const validRelationships = ['synergistic', 'antagonistic', 'permissive'];
+    Object.values(HORMONE_EDUCATION).forEach(hormone => {
+      hormone.relatedHormones.forEach(rel => {
+        expect(validRelationships).toContain(rel.relationship);
+      });
+    });
+  });
+
+  it('should include insulin education', () => {
+    const insulin = HORMONE_EDUCATION.insulin;
+    expect(insulin).toBeDefined();
+    expect(insulin.name).toBe('Insulin');
+    expect(insulin.category).toBe('storage');
+    expect(insulin.relatedHormones.some(r => r.hormone === 'glucagon')).toBe(true);
+  });
+
+  it('should include cortisol education', () => {
+    const cortisol = HORMONE_EDUCATION.cortisol;
+    expect(cortisol).toBeDefined();
+    expect(cortisol.name).toBe('Cortisol');
+    expect(cortisol.category).toBe('catabolic');
+  });
+
+  it('should include testosterone education', () => {
+    const testosterone = HORMONE_EDUCATION.testosterone;
+    expect(testosterone).toBeDefined();
+    expect(testosterone.name).toBe('Testosterone');
+    expect(testosterone.category).toBe('anabolic');
+  });
+
+  it('should include growth hormone education', () => {
+    const gh = HORMONE_EDUCATION.growthHormone;
+    expect(gh).toBeDefined();
+    expect(gh.name).toBe('Growth Hormone');
+    expect(gh.category).toBe('anabolic');
+  });
+
+  it('should have antagonistic relationship between insulin and glucagon', () => {
+    const insulin = HORMONE_EDUCATION.insulin;
+    const glucagonRel = insulin.relatedHormones.find(r => r.hormone === 'glucagon');
+    expect(glucagonRel).toBeDefined();
+    expect(glucagonRel?.relationship).toBe('antagonistic');
+  });
+
+  it('should have time to peak and half life data', () => {
+    Object.values(HORMONE_EDUCATION).forEach(hormone => {
+      expect(hormone.timeToPeak).toBeTruthy();
+      expect(hormone.halfLife).toBeTruthy();
+    });
+  });
+
+  it('should have at least 8 hormones in education database', () => {
+    expect(Object.keys(HORMONE_EDUCATION).length).toBeGreaterThanOrEqual(8);
   });
 });

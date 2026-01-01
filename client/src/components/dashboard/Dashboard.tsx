@@ -24,6 +24,7 @@ import ActionButtons from './ActionButtons';
 import BloodGlucosePanel from './BloodGlucosePanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import RecommendationsPanel from './RecommendationsPanel';
+import HormoneEducationHub from '../education/HormoneEducationHub';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
 
 type ViewMode = 'dashboard' | 'scenarios';
@@ -32,22 +33,34 @@ type ViewMode = 'dashboard' | 'scenarios';
 const DashboardHeader = memo(function DashboardHeader({
   activeScenario,
   onScenarioToggle,
+  onEducationOpen,
 }: {
   activeScenario: Scenario | null;
   onScenarioToggle: () => void;
+  onEducationOpen: () => void;
 }) {
   return (
     <div className="flex items-center justify-between flex-wrap gap-4">
       <ActionButtons />
-      {!activeScenario && (
+      <div className="flex items-center gap-2">
         <button
-          onClick={onScenarioToggle}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors flex items-center gap-2"
+          onClick={onEducationOpen}
+          className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded transition-colors flex items-center gap-2"
+          title="Learn about hormones and how they affect your metabolism"
         >
-          <span>📚</span>
-          <span>Scenarios</span>
+          <span>🧬</span>
+          <span className="hidden sm:inline">Education Hub</span>
         </button>
-      )}
+        {!activeScenario && (
+          <button
+            onClick={onScenarioToggle}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors flex items-center gap-2"
+          >
+            <span>📚</span>
+            <span>Scenarios</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 });
@@ -122,6 +135,7 @@ function Dashboard() {
   const { state } = useSimulationStore();
   const { activeScenario } = useScenarioStore();
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
+  const [showEducationHub, setShowEducationHub] = useState(false);
 
   if (!state) {
     return (
@@ -151,6 +165,7 @@ function Dashboard() {
   }
 
   return (
+    <>
     <div className="space-y-6">
       {/* Active scenario panel (if scenario is active) */}
       {activeScenario && <ActiveScenarioPanel />}
@@ -159,6 +174,7 @@ function Dashboard() {
       <DashboardHeader
         activeScenario={activeScenario}
         onScenarioToggle={() => setViewMode('scenarios')}
+        onEducationOpen={() => setShowEducationHub(true)}
       />
 
       {/* Top row - Profile + Quick Stats */}
@@ -191,6 +207,12 @@ function Dashboard() {
       {/* Hormone Insights */}
       <HormoneInsights />
     </div>
+
+    {/* Education Hub Modal */}
+    {showEducationHub && (
+      <HormoneEducationHub onClose={() => setShowEducationHub(false)} />
+    )}
+  </>
   );
 }
 
