@@ -14,6 +14,7 @@ import {
   getActiveEffect,
   HORMONE_BASELINES,
 } from '../utils/demoSimulation';
+import { useAchievementsStore } from './achievementsStore';
 
 // History for sparkline visualization (limited to 20 points for performance)
 interface HormoneHistory {
@@ -162,6 +163,15 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
           caloriesConsumed: 0,
           caloriesBurned: 0,
           netCalories: 0,
+          bloodGlucose: {
+            currentValue: 85,
+            baseline: 85,
+            peak: 85,
+            trend: 0,
+            lastMealTime: undefined,
+            lastMealGlycemicLoad: 0,
+            units: 'mg/dL',
+          },
           carbohydrates: { consumed: 0, burned: 0, target: 300 },
           proteins: { consumed: 0, burned: 0, target: 120 },
           fats: { consumed: 0, burned: 0, target: 75 },
@@ -306,6 +316,19 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
 
         set({ state: updatedState });
         success();
+
+        // Track achievement
+        useAchievementsStore.getState().trackMeal();
+
+        // Track hormone peaks for achievements
+        if (updatedState.hormones.insulin.currentValue > 20) {
+          useAchievementsStore.getState().trackHormonePeak('insulin', updatedState.hormones.insulin.currentValue);
+        }
+
+        // Track protein target hit
+        if (updatedState.energy.proteins.consumed >= updatedState.energy.proteins.target) {
+          useAchievementsStore.getState().trackProteinStreak();
+        }
       } else {
         addToast('Failed to log meal', 'warning');
       }
@@ -356,6 +379,17 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
 
         set({ state: updatedState });
         success();
+
+        // Track achievement
+        useAchievementsStore.getState().trackExercise();
+
+        // Track hormone peaks for achievements
+        if (updatedState.hormones.testosterone.currentValue > 20) {
+          useAchievementsStore.getState().trackHormonePeak('testosterone', updatedState.hormones.testosterone.currentValue);
+        }
+
+        // Track muscle gain
+        useAchievementsStore.getState().trackMuscleGain(updatedState.muscle.totalMass);
       } else {
         addToast('Failed to log exercise', 'warning');
       }
@@ -390,6 +424,11 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
         if (intensity <= 0.4) success('Low');
         else if (intensity <= 0.7) success('Medium');
         else success('High');
+
+        // Track cortisol peak for achievements if stress is high
+        if (intensity > 0.7) {
+          useAchievementsStore.getState().trackHormonePeak('cortisol', 30);
+        }
       } else {
         addToast('Failed to set stress level', 'warning');
       }
@@ -437,6 +476,17 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
 
         set({ state: updatedState });
         success();
+
+        // Track achievement
+        useAchievementsStore.getState().trackSleep();
+
+        // Track testosterone boost from sleep for achievements
+        if (quality > 0.7 && hours >= 7) {
+          useAchievementsStore.getState().trackHormonePeak('testosterone', 28);
+        }
+
+        // Track fasting state
+        useAchievementsStore.getState().trackFastingStreak(8); // Assume 8h fast during sleep
       } else {
         addToast('Failed to log sleep', 'warning');
       }
@@ -481,10 +531,41 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
 // WebSocket connection
 let ws: WebSocket | null = null;
 let reconnectAttempts = 0;
-let maxReconnectAttempts = 3;
+let maxReconnectAttempts = 5; // Increased from 3 for better reliability
 let shouldReconnect = true;
+let reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+// Clear reconnect timeout to prevent memory leaks
+function clearReconnectTimeout() {
+  if (reconnectTimeoutId) {
+    clearTimeout(reconnectTimeoutId);
+    reconnectTimeoutId = null;
+  }
+}
+
+// Calculate exponential backoff delay (max 30 seconds)
+function getReconnectDelay(): number {
+  const baseDelay = 1000; // 1 second
+  const maxDelay = 30000; // 30 seconds
+  const delay = Math.min(baseDelay * Math.pow(2, reconnectAttempts), maxDelay);
+  // Add jitter to prevent thundering herd
+  return delay + Math.random() * 1000;
+}
+
+// Clean up WebSocket event handlers to prevent memory leaks
+function cleanupWebSocket() {
+  if (ws) {
+    ws.onopen = null;
+    ws.onmessage = null;
+    ws.onerror = null;
+    ws.onclose = null;
+  }
+}
 
 export function connectWebSocket(userId: string) {
+  // Clear any pending reconnection timeout
+  clearReconnectTimeout();
+
   // Don't reconnect if we've exceeded max attempts
   if (reconnectAttempts >= maxReconnectAttempts) {
     console.log('WebSocket reconnection limit reached, staying in demo mode');
@@ -493,6 +574,7 @@ export function connectWebSocket(userId: string) {
 
   // Close existing connection if any
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+    cleanupWebSocket();
     ws.close();
   }
 
@@ -530,14 +612,19 @@ export function connectWebSocket(userId: string) {
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
-      reconnectAttempts++;
+      // Don't increment here - let onclose handle reconnection
     };
 
     ws.onclose = () => {
       console.log('WebSocket disconnected');
+      cleanupWebSocket();
+
       // Only reconnect if we haven't exceeded max attempts and shouldReconnect is true
       if (shouldReconnect && reconnectAttempts < maxReconnectAttempts) {
-        setTimeout(() => connectWebSocket(userId), 3000);
+        reconnectAttempts++;
+        const delay = getReconnectDelay();
+        console.log(`Reconnecting in ${Math.round(delay / 1000)} seconds... (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+        reconnectTimeoutId = setTimeout(() => connectWebSocket(userId), delay);
       } else {
         console.log('WebSocket staying in demo mode');
       }
@@ -550,9 +637,13 @@ export function connectWebSocket(userId: string) {
 
 export function disconnectWebSocket() {
   shouldReconnect = false;
+  clearReconnectTimeout();
+
   if (ws) {
-    ws.onclose = null; // Remove reconnect handler
-    ws.close();
+    cleanupWebSocket();
+    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+      ws.close();
+    }
     ws = null;
   }
 }
@@ -560,4 +651,5 @@ export function disconnectWebSocket() {
 export function resetWebSocketState() {
   shouldReconnect = true;
   reconnectAttempts = 0;
+  clearReconnectTimeout();
 }

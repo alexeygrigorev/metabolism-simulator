@@ -6,6 +6,7 @@ import { useSimulationStore } from '../../state/store';
 import { useState, useRef, useEffect, memo } from 'react';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import KeyboardShortcutsModal from '../ui/KeyboardShortcutsModal';
+import MealBuilder from './MealBuilder';
 
 interface QuickMeal {
   name: string;
@@ -130,6 +131,7 @@ const ActionButtons = memo(function ActionButtons() {
   const { logMeal, logExercise, logSleep, applyStress } = useSimulationStore();
   const [showMealOptions, setShowMealOptions] = useState(false);
   const [showExerciseOptions, setShowExerciseOptions] = useState(false);
+  const [showMealBuilder, setShowMealBuilder] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const mealRef = useRef<HTMLDivElement>(null);
   const exerciseRef = useRef<HTMLDivElement>(null);
@@ -157,6 +159,19 @@ const ActionButtons = memo(function ActionButtons() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Handle escape key to close dropdowns
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowMealOptions(false);
+        setShowExerciseOptions(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
   const handleQuickMeal = async (meal: QuickMeal) => {
@@ -218,28 +233,52 @@ const ActionButtons = memo(function ActionButtons() {
     await applyStress(intensity);
   };
 
+  const mealId = 'meal-dropdown';
+  const exerciseId = 'exercise-dropdown';
+
   return (
     <>
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center" role="group" aria-label="Simulation controls">
         {/* Meal buttons */}
         <div className="relative" ref={mealRef}>
           <button
+            id={mealId}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
             onClick={() => setShowMealOptions(!showMealOptions)}
+            aria-expanded={showMealOptions}
+            aria-haspopup="menu"
+            aria-label="Log meal (press M to open)"
           >
             🍽️ Log Meal
           </button>
           {showMealOptions && (
-            <div className="absolute top-full left-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-2 z-10 min-w-[150px]">
-              {QUICK_MEALS.map((meal) => (
+            <div
+              className="absolute top-full left-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-2 z-10 min-w-[150px]"
+              role="menu"
+              aria-labelledby={mealId}
+            >
+              {QUICK_MEALS.map((meal, index) => (
                 <button
                   key={meal.name}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-slate-700 rounded transition-colors"
                   onClick={() => handleQuickMeal(meal)}
+                  role="menuitem"
+                  tabIndex={index === 0 ? 0 : -1}
                 >
                   {meal.name}
                 </button>
               ))}
+              <div className="border-t border-slate-700 my-1" />
+              <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-700 rounded transition-colors text-blue-400"
+                onClick={() => {
+                  setShowMealOptions(false);
+                  setShowMealBuilder(true);
+                }}
+                role="menuitem"
+              >
+                🛠️ Build Custom Meal...
+              </button>
             </div>
           )}
         </div>
@@ -247,18 +286,28 @@ const ActionButtons = memo(function ActionButtons() {
         {/* Exercise buttons */}
         <div className="relative" ref={exerciseRef}>
           <button
+            id={exerciseId}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
             onClick={() => setShowExerciseOptions(!showExerciseOptions)}
+            aria-expanded={showExerciseOptions}
+            aria-haspopup="menu"
+            aria-label="Log exercise (press E to open)"
           >
             💪 Log Exercise
           </button>
           {showExerciseOptions && (
-            <div className="absolute top-full left-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-2 z-10 min-w-[150px]">
-              {QUICK_EXERCISES.map((exercise) => (
+            <div
+              className="absolute top-full left-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-2 z-10 min-w-[150px]"
+              role="menu"
+              aria-labelledby={exerciseId}
+            >
+              {QUICK_EXERCISES.map((exercise, index) => (
                 <button
                   key={exercise.name}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-slate-700 rounded transition-colors"
                   onClick={() => handleQuickExercise(exercise)}
+                  role="menuitem"
+                  tabIndex={index === 0 ? 0 : -1}
                 >
                   {exercise.name}
                 </button>
@@ -272,17 +321,43 @@ const ActionButtons = memo(function ActionButtons() {
           className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded transition-colors"
           onClick={handleSleep}
           title="Log 8 hours of quality sleep"
+          aria-label="Log 8 hours of quality sleep"
         >
           😴 Sleep (8h)
         </button>
 
+        {/* Water tracking button */}
+        <button
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors"
+          onClick={() => {
+            // Log 250ml of water
+            logMeal({
+              id: Date.now().toString(),
+              name: 'Water (250ml)',
+              time: new Date().toISOString(),
+              items: [{ foodId: 'water', servings: 1 }],
+              totalMacros: { carbohydrates: 0, proteins: 0, fats: 0, fiber: 0, water: 250 },
+              glycemicLoad: 0,
+              insulinResponse: { peak: 0, magnitude: 0, duration: 0, areaUnderCurve: 0 },
+            }).then(() => {
+              // This will be processed by the store
+            });
+          }}
+          title="Log 250ml water"
+          aria-label="Log 250ml water"
+        >
+          💧 Water (250ml)
+        </button>
+
         {/* Stress buttons */}
-        <div className="flex gap-1 items-center">
-          <span className="text-sm text-slate-400">Stress:</span>
+        <div className="flex gap-1 items-center" role="group" aria-label="Stress level controls">
+          <span className="text-sm text-slate-400" id="stress-label">Stress:</span>
           <button
             className="px-2 py-1 text-xs rounded bg-red-900/30 text-red-400 hover:bg-red-900/50 transition-colors"
             onClick={() => handleStress(0.3)}
             title="Low stress"
+            aria-label="Apply low stress"
+            aria-describedby="stress-label"
           >
             Low
           </button>
@@ -290,6 +365,8 @@ const ActionButtons = memo(function ActionButtons() {
             className="px-2 py-1 text-xs rounded bg-red-900/50 text-red-400 hover:bg-red-900/70 transition-colors"
             onClick={() => handleStress(0.6)}
             title="Moderate stress"
+            aria-label="Apply moderate stress"
+            aria-describedby="stress-label"
           >
             Med
           </button>
@@ -297,6 +374,8 @@ const ActionButtons = memo(function ActionButtons() {
             className="px-2 py-1 text-xs rounded bg-red-900/70 text-red-400 hover:bg-red-900 transition-colors"
             onClick={() => handleStress(1.0)}
             title="High stress"
+            aria-label="Apply high stress"
+            aria-describedby="stress-label"
           >
             High
           </button>
@@ -307,6 +386,7 @@ const ActionButtons = memo(function ActionButtons() {
           className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors text-sm"
           onClick={() => setShowHelpModal(true)}
           title="Keyboard shortcuts"
+          aria-label="View keyboard shortcuts (press ? to open)"
         >
           ⌨️ ?
         </button>
@@ -314,6 +394,9 @@ const ActionButtons = memo(function ActionButtons() {
 
       {/* Keyboard shortcuts modal */}
       <KeyboardShortcutsModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
+
+      {/* Meal Builder Modal */}
+      <MealBuilder isOpen={showMealBuilder} onClose={() => setShowMealBuilder(false)} />
     </>
   );
 });

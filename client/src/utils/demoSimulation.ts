@@ -2,6 +2,92 @@
 // METABOLIC SIMULATOR - DEMO SIMULATION
 // ============================================================================
 
+// Blood glucose baseline
+export const BLOOD_GLUCOSE_BASELINE = 85; // mg/dL
+
+// Active blood glucose effect
+let activeGlucoseEffect: {
+  targetValue: number;
+  startTime: number;
+  duration: number;
+  mealGlycemicLoad: number;
+} | null = null;
+
+// Calculate blood glucose effect from meal
+export function calculateBloodGlucoseResponse(glycemicLoad: number): {
+  peak: number;
+  timeToPeak: number;
+  duration: number;
+} {
+  // Peak glucose rise (mg/dL) based on glycemic load
+  const peak = Math.round(20 + (glycemicLoad * 2.5));
+
+  // Time to peak (minutes)
+  const timeToPeak = 30;
+
+  // Duration (minutes)
+  const duration = 120;
+
+  return { peak, timeToPeak, duration };
+}
+
+// Add blood glucose effect from meal
+export function addBloodGlucoseEffect(glycemicLoad: number) {
+  const response = calculateBloodGlucoseResponse(glycemicLoad);
+
+  activeGlucoseEffect = {
+    targetValue: BLOOD_GLUCOSE_BASELINE + response.peak,
+    startTime: Date.now(),
+    duration: response.timeToPeak * 60 * 1000, // Time to peak in ms
+    mealGlycemicLoad: glycemicLoad,
+  };
+}
+
+// Get current blood glucose value
+export function getCurrentBloodGlucose(): number {
+  if (!activeGlucoseEffect) {
+    return BLOOD_GLUCOSE_BASELINE;
+  }
+
+  const now = Date.now();
+  const elapsed = now - activeGlucoseEffect.startTime;
+
+  // If effect has expired, return to baseline
+  if (elapsed > activeGlucoseEffect.duration * 2) {
+    activeGlucoseEffect = null;
+    return BLOOD_GLUCOSE_BASELINE;
+  }
+
+  // Calculate glucose curve (rise then fall)
+  const timeToPeak = activeGlucoseEffect.duration;
+  const peakValue = activeGlucoseEffect.targetValue;
+
+  if (elapsed < timeToPeak) {
+    // Rising phase
+    const progress = elapsed / timeToPeak;
+    return BLOOD_GLUCOSE_BASELINE + (peakValue - BLOOD_GLUCOSE_BASELINE) * progress;
+  } else {
+    // Falling phase (decay back to baseline)
+    const timeSincePeak = elapsed - timeToPeak;
+    const decayDuration = activeGlucoseEffect.duration;
+    const progress = Math.min(1, timeSincePeak / decayDuration);
+    return BLOOD_GLUCOSE_BASELINE + (peakValue - BLOOD_GLUCOSE_BASELINE) * (1 - progress);
+  }
+}
+
+// Get blood glucose trend
+export function getBloodGlucoseTrend(): -1 | 0 | 1 {
+  if (!activeGlucoseEffect) return 0;
+
+  const now = Date.now();
+  const elapsed = now - activeGlucoseEffect.startTime;
+  const timeToPeak = activeGlucoseEffect.duration;
+
+  if (elapsed < timeToPeak) return 1; // Rising
+  if (elapsed < timeToPeak * 1.5) return -1; // Falling
+  return 0; // Stable
+}
+
 // Realistic hormone response curves for demo mode
 export const HORMONE_BASELINES = {
   insulin: { baseline: 5, peak: 25, trough: 3 },
@@ -37,6 +123,9 @@ export function calculateHormoneResponse(
 // Simulate meal effect on hormones
 export function simulateMealEffect(meal: { glycemicLoad: number; macros: { proteins: number } }) {
   const responses: Record<string, { peak: number; duration: number }> = {};
+
+  // Trigger blood glucose response
+  addBloodGlucoseEffect(meal.glycemicLoad);
 
   // Insulin response based on glycemic load
   const insulinPeak = HORMONE_BASELINES.insulin.baseline + meal.glycemicLoad * 0.3;

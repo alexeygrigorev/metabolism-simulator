@@ -125,6 +125,9 @@ export interface EnergyState {
   caloriesBurned: number;   // Today's burn (BMR + activity + exercise)
   netCalories: number;      // Consumed - Burned
 
+  // Blood glucose (mg/dL or mmol/L)
+  bloodGlucose: BloodGlucoseState;
+
   // Macronutrients (grams)
   carbohydrates: MacroState;
   proteins: MacroState;
@@ -154,6 +157,16 @@ export interface GlycogenState {
     muscle: number;    // grams
     liver: number;     // grams
   };
+}
+
+export interface BloodGlucoseState {
+  currentValue: number;     // mg/dL (normal: 70-100 fasting, <140 postprandial)
+  baseline: number;         // Personal baseline (typically ~80-90 mg/dL)
+  peak: number;             // Recent peak value
+  trend: Trend;             // Rising, stable, falling
+  lastMealTime?: Date;      // Time of last meal affecting glucose
+  lastMealGlycemicLoad: number; // GL of last meal
+  units: 'mg/dL' | 'mmol/L';
 }
 
 export interface SubstrateUtilization {
@@ -473,6 +486,9 @@ export interface SimulationState {
   hormones: HormonalState;
   muscle: MuscleState;
 
+  // Health markers (comprehensive blood work and vitals)
+  healthMarkers?: HealthMarkers;
+
   // Recent events
   recentMeals: Meal[];
   recentExercises: ExerciseSession[];
@@ -520,3 +536,105 @@ export interface ChartDataPoint {
   time: string;
   [key: string]: string | number | undefined;
 }
+
+// ----------------------------------------------------------------------------
+// Health Markers
+// ----------------------------------------------------------------------------
+
+export interface HealthMarkers {
+  // Lipid Panel (mg/dL)
+  lipids: LipidPanel;
+  // Liver Function
+  liver: LiverPanel;
+  // Kidney Function
+  kidney: KidneyPanel;
+  // Inflammatory Markers
+  inflammation: InflammatoryPanel;
+  // Cardiovascular Health
+  cardiovascular: CardiovascularPanel;
+  // Thyroid Function
+  thyroid?: ThyroidPanel;
+}
+
+export interface LipidPanel {
+  totalCholesterol: HealthMarker;      // mg/dL (normal: <200)
+  ldl: HealthMarker;                   // LDL cholesterol (normal: <100)
+  hdl: HealthMarker;                   // HDL cholesterol (normal: >40 men, >50 women)
+  triglycerides: HealthMarker;         // mg/dL (normal: <150)
+  cholesterolRatio?: number;           // Total/HDL ratio (normal: <5)
+}
+
+export interface LiverPanel {
+  alt: HealthMarker;                   // ALT (SGPT) U/L (normal: 7-56)
+  ast: HealthMarker;                   // AST (SGOT) U/L (normal: 10-40)
+  alkalinePhosphatase?: HealthMarker;  // U/L (normal: 44-147)
+  bilirubin?: HealthMarker;            // mg/dL (normal: 0.3-1.0)
+  albumin?: HealthMarker;              // g/dL (normal: 3.5-5.0)
+}
+
+export interface KidneyPanel {
+  creatinine: HealthMarker;            // mg/dL (normal: 0.7-1.3)
+  bun: HealthMarker;                   // BUN mg/dL (normal: 7-20)
+  egfr: HealthMarker;                  // eGFR mL/min/1.73m² (normal: >90)
+  uricAcid?: HealthMarker;             // mg/dL (normal: 3.4-7.0)
+}
+
+export interface InflammatoryPanel {
+  crp: HealthMarker;                   // C-reactive protein mg/L (normal: <3)
+  esr?: HealthMarker;                  // Erythrocyte sedimentation rate mm/hr
+  fibrinogen?: HealthMarker;           // mg/dL (normal: 200-400)
+  ferritin?: HealthMarker;             // ng/mL (normal: 30-300)
+}
+
+export interface CardiovascularPanel {
+  restingHeartRate: HealthMarker;      // bpm (normal: 60-100)
+  bloodPressure: BloodPressure;
+  hrv: HeartRateVariability;
+  vo2Max?: HealthMarker;               // mL/kg/min
+}
+
+export interface BloodPressure {
+  systolic: HealthMarker;              // mmHg (normal: <120)
+  diastolic: HealthMarker;             // mmHg (normal: <80)
+  pulsePressure?: number;              // Systolic - Diastolic (normal: 35-50)
+  category: BPCategory;
+}
+
+export type BPCategory =
+  | 'optimal'      // <120/<80
+  | 'normal'       // 120-129/<80
+  | 'elevated'     // 120-129/80-89
+  | 'stage1'       // 130-139/80-89
+  | 'stage2'       // ≥140/≥90
+  | 'crisis';      // >180/>120
+
+export interface HeartRateVariability {
+  rmssd: HealthMarker;                 // Root Mean Square of Successive Differences ms (normal: >30)
+  hrvScore: HealthMarker;              // Overall HRV score 0-100 (normal: >50)
+  heartRateVariability: number;        // SDNN ms (normal: >50)
+  recoveryStatus: 'excellent' | 'good' | 'fair' | 'poor';
+}
+
+export interface ThyroidPanel {
+  tsh: HealthMarker;                   // TSH mIU/L (normal: 0.4-4.0)
+  freeT4?: HealthMarker;               // Free T4 ng/dL (normal: 0.8-1.8)
+  freeT3?: HealthMarker;               // Free T3 pg/mL (normal: 2.3-4.2)
+}
+
+export interface HealthMarker {
+  value: number;
+  unit: string;
+  status: MarkerStatus;
+  optimalRange: [number, number];
+  concerningRange?: [number, number];
+  criticalRange?: [number, number];
+  trend: Trend;
+  lastMeasured?: Date;
+}
+
+export type MarkerStatus =
+  | 'optimal'      // Within optimal range
+  | 'normal'       // Within normal range
+  | 'elevated'     // Above normal, not concerning
+  | 'concerning'   // Outside concerning range
+  | 'critical';    // Outside critical range

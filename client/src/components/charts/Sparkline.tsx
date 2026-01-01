@@ -2,6 +2,8 @@
 // METABOLIC SIMULATOR - SPARKLINE CHART COMPONENT
 // ============================================================================
 
+import { memo, useMemo } from 'react';
+
 interface SparklineProps {
   data: number[];
   color: string;
@@ -9,19 +11,21 @@ interface SparklineProps {
   height?: number;
 }
 
-export default function Sparkline({ data, color, width = 60, height = 20 }: SparklineProps) {
+const Sparkline = memo(function Sparkline({ data, color, width = 60, height = 20 }: SparklineProps) {
   if (data.length < 2) return null;
 
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
+  // Memoize points calculation to avoid recalculation on every render
+  const points = useMemo(() => {
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const range = max - min || 1;
 
-  // Generate SVG path
-  const points = data.map((value, index) => {
-    const x = (index / (data.length - 1)) * width;
-    const y = height - ((value - min) / range) * height;
-    return `${x},${y}`;
-  }).join(' ');
+    return data.map((value, index) => {
+      const x = (index / (data.length - 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${x},${y}`;
+    }).join(' ');
+  }, [data, width, height]);
 
   return (
     <svg width={width} height={height} className="overflow-visible">
@@ -35,4 +39,6 @@ export default function Sparkline({ data, color, width = 60, height = 20 }: Spar
       />
     </svg>
   );
-}
+});
+
+export default Sparkline;

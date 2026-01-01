@@ -129,12 +129,25 @@ function createInitialEnergyState(
   const muscleGlycogenCapacity = muscleMass * 15; // 15g per kg muscle
   const liverGlycogenCapacity = 100; // ~100g average
 
+  // Baseline blood glucose (mg/dL)
+  const baselineGlucose = 85;
+
   return {
     bmr,
     tdee,
     caloriesConsumed: 0,
     caloriesBurned: 0,
     netCalories: 0,
+
+    bloodGlucose: {
+      currentValue: baselineGlucose,
+      baseline: baselineGlucose,
+      peak: baselineGlucose,
+      trend: 0, // Stable
+      lastMealTime: undefined,
+      lastMealGlycemicLoad: 0,
+      units: 'mg/dL',
+    },
 
     carbohydrates: { consumed: 0, burned: 0, target: (tdee * 0.5) / 4 },
     proteins: { consumed: 0, burned: 0, target: (profile.weight * 1.6) },

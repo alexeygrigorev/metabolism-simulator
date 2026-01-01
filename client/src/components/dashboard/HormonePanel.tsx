@@ -4,6 +4,7 @@
 
 import { useSimulationStore } from '../../state/store';
 import Sparkline from '../charts/Sparkline';
+import HormoneTooltip from '../ui/HormoneTooltip';
 import { memo, useMemo, useEffect, useState } from 'react';
 
 interface HormonePanelProps {
@@ -97,16 +98,22 @@ const HormonePanel = memo(function HormonePanel({ hormone, label, color, unit }:
   }, [visualState.level, visualState.intensity, color]);
 
   return (
-    <div className={containerClass} style={{ boxShadow: glowEffect }}>
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold" style={{ color }}>{label}</h3>
-        <div className="flex items-center gap-2">
-          {history && history.length >= 2 && (
-            <Sparkline data={history} color={color} width={40} height={16} />
-          )}
-          <span className={`text-sm ${getTrendColor()}`}>{getTrendIcon()}</span>
+    <HormoneTooltip hormoneId={hormone} currentValue={currentValue}>
+      <div className={containerClass} style={{ boxShadow: glowEffect }}>
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold" style={{ color }}>{label}</h3>
+            <span className="text-xs text-slate-500 hover:text-slate-400 transition-colors cursor-help" title="Click for more info">
+              ⓘ
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {history && history.length >= 2 && (
+              <Sparkline data={history} color={color} width={40} height={16} />
+            )}
+            <span className={`text-sm ${getTrendColor()}`}>{getTrendIcon()}</span>
+          </div>
         </div>
-      </div>
 
       <div className="space-y-2">
         <div className="flex justify-between items-baseline">
@@ -139,6 +146,7 @@ const HormonePanel = memo(function HormonePanel({ hormone, label, color, unit }:
         </div>
       </div>
     </div>
+    </HormoneTooltip>
   );
 });
 

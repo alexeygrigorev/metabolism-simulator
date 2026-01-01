@@ -46,7 +46,6 @@ const ActiveScenarioPanel = memo(function ActiveScenarioPanel() {
           }
           break;
 
-        case 'Log a resistance exercise':
         case 'Log 8 hours of quality sleep':
         case 'Apply high stress':
         case 'Skip sleep or log poor sleep':

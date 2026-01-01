@@ -2,8 +2,9 @@
 // METABOLIC SIMULATOR - SETTINGS PANEL COMPONENT
 // ============================================================================
 
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { useSimulationStore } from '../../state/store';
+import type { SimulationState } from '@metabol-sim/shared';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ type TemperatureUnit = 'celsius' | 'fahrenheit';
 type Theme = 'dark' | 'light';
 
 const SETTINGS_KEY = 'metabol-sim-settings';
+const DATA_VERSION = 2;
 
 interface UserSettings {
   timeUnit: TimeUnit;
@@ -36,6 +38,13 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultTimeScale: 1,
 };
 
+interface ExportData {
+  version: number;
+  exportDate: string;
+  settings: UserSettings;
+  simulation: SimulationState;
+}
+
 function loadSettings(): UserSettings {
   try {
     const saved = localStorage.getItem(SETTINGS_KEY);
@@ -56,10 +65,29 @@ function saveSettings(settings: UserSettings) {
   }
 }
 
+// Validate that the imported data has the required structure
+function isValidSimulationState(data: any): data is SimulationState {
+  return (
+    data &&
+    typeof data === 'object' &&
+    typeof data.id === 'string' &&
+    typeof data.userId === 'string' &&
+    data.user &&
+    typeof data.user.age === 'number' &&
+    data.energy &&
+    typeof data.energy.bmr === 'number' &&
+    data.hormones &&
+    data.muscle
+  );
+}
+
 const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const { state, setTimeScale, setPaused, reset } = useSimulationStore();
+  const { state, connected, setTimeScale, setPaused, reset, setState, addToast } = useSimulationStore();
   const [settings, setSettings] = useState<UserSettings>(loadSettings);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Apply theme
   useEffect(() => {
@@ -74,45 +102,121 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     saveSettings(newSettings);
-    setHasChanges(true);
   };
 
   const handleReset = () => {
     if (confirm('Are you sure you want to reset all simulation data? This cannot be undone.')) {
       reset();
+      addToast('Simulation reset successfully', 'success');
       onClose();
     }
   };
 
   const handleExportData = () => {
-    if (!state) return;
+    if (!state) {
+      addToast('No simulation data to export', 'warning');
+      return;
+    }
 
-    const data = {
-      version: 1,
-      exportDate: new Date().toISOString(),
-      settings: loadSettings(),
-      simulation: {
-        user: state.user,
-        energy: {
-          caloriesConsumed: state.energy.caloriesConsumed,
-          caloriesBurned: state.energy.caloriesBurned,
-          netCalories: state.energy.netCalories,
-        },
-        hormones: state.hormones,
-        muscle: {
-          totalMass: state.muscle.totalMass,
-          trainingAdaptations: state.muscle.trainingAdaptations,
-        },
-      },
+    setIsExporting(true);
+
+    try {
+      const exportData: ExportData = {
+        version: DATA_VERSION,
+        exportDate: new Date().toISOString(),
+        settings: loadSettings(),
+        simulation: state,
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateStr = new Date().toISOString().split('T')[0];
+      a.download = `metabol-sim-export-${dateStr}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      addToast('Data exported successfully', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      addToast('Failed to export data', 'warning');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportClick = () => {
+    setImportError(null);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportError(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const data = JSON.parse(content);
+
+        // Validate version
+        if (!data.version) {
+          throw new Error('Invalid file format: missing version');
+        }
+
+        // Validate version compatibility
+        if (data.version > DATA_VERSION) {
+          throw new Error(`File version ${data.version} is not supported. Please update the simulator.`);
+        }
+
+        // Restore settings if present
+        if (data.settings) {
+          const mergedSettings = { ...DEFAULT_SETTINGS, ...data.settings };
+          setSettings(mergedSettings);
+          saveSettings(mergedSettings);
+        }
+
+        // Import simulation state
+        if (data.simulation && isValidSimulationState(data.simulation)) {
+          // Preserve current timestamp and settings
+          const importedState: SimulationState = {
+            ...data.simulation,
+            timestamp: new Date(),
+            gameTime: data.simulation.gameTime || new Date(),
+          };
+
+          setState(importedState);
+          addToast('Data imported successfully', 'success');
+          onClose();
+        } else {
+          throw new Error('Invalid simulation data in file');
+        }
+
+        setImportError(null);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Failed to import data';
+        setImportError(errorMsg);
+        addToast(`Import failed: ${errorMsg}`, 'warning');
+      } finally {
+        setIsImporting(false);
+      }
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `metabol-sim-export-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    reader.onerror = () => {
+      setImportError('Failed to read file');
+      addToast('Failed to read file', 'warning');
+      setIsImporting(false);
+    };
+
+    reader.readAsText(file);
+
+    // Reset input
+    e.target.value = '';
   };
 
   if (!isOpen) return null;
@@ -263,10 +367,62 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
             <div className="space-y-2">
               <button
                 onClick={handleExportData}
-                className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors text-sm"
+                disabled={isExporting || isImporting || !state}
+                className={`w-full px-4 py-2 rounded transition-colors text-sm flex items-center justify-center gap-2 ${
+                  isExporting || isImporting || !state
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    : 'bg-slate-700 hover:bg-slate-600 text-white'
+                }`}
               >
-                📤 Export Data
+                {isExporting ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Exporting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📤</span>
+                    <span>Export Data</span>
+                  </>
+                )}
               </button>
+              <button
+                onClick={handleImportClick}
+                disabled={isExporting || isImporting}
+                className={`w-full px-4 py-2 rounded transition-colors text-sm flex items-center justify-center gap-2 ${
+                  isExporting || isImporting
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    : 'bg-slate-700 hover:bg-slate-600 text-white'
+                }`}
+              >
+                {isImporting ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Importing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📥</span>
+                    <span>Import Data</span>
+                  </>
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={isImporting}
+              />
+              {importError && (
+                <div className="px-3 py-2 bg-red-900/30 border border-red-700 rounded text-red-400 text-sm">
+                  ⚠️ {importError}
+                </div>
+              )}
+              <div className="p-2 bg-slate-900/50 rounded text-xs text-slate-400">
+                Export saves your full simulation state including hormones, energy, muscle status, and health markers to a JSON file.
+              </div>
               <button
                 onClick={handleReset}
                 className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition-colors text-sm"
@@ -281,11 +437,11 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">Status</span>
               <span className={`px-2 py-0.5 rounded text-xs ${
-                state?.connected
+                connected
                   ? 'bg-green-500/20 text-green-400'
                   : 'bg-yellow-500/20 text-yellow-400'
               }`}>
-                {state?.connected ? '🟢 Live Mode' : '🟡 Demo Mode'}
+                {connected ? '🟢 Live Mode' : '🟡 Demo Mode'}
               </span>
             </div>
           </section>

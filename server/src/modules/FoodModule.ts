@@ -316,6 +316,8 @@ interface DigestingMeal {
   elapsedTime: number; // minutes
   totalDigestionTime: number;
   absorbedMacros: Macros;
+  remainingGlucoseImpact?: number; // Remaining glucose to be absorbed (mg/dL)
+  glucoseAbsorptionTime?: number; // Time to peak glucose absorption (minutes)
 }
 
 // ----------------------------------------------------------------------------
@@ -334,6 +336,9 @@ export class FoodModule {
    * Main update function called by simulation loop
    */
   public update(state: SimulationState, dtMinutes: number): void {
+    // Update blood glucose (decay towards baseline)
+    this.updateBloodGlucose(state, dtMinutes);
+
     // Update digesting meals
     this.digestingMeals = this.digestingMeals.filter((digesting) => {
       digesting.elapsedTime += dtMinutes;
@@ -344,10 +349,92 @@ export class FoodModule {
         return false;
       }
 
-      // Gradual absorption
+      // Gradual absorption - this updates blood glucose
       this.gradualAbsorption(state, digesting, dtMinutes);
       return true;
     });
+  }
+
+  /**
+   * Initialize blood glucose state if not present
+   */
+  private initializeBloodGlucose(state: SimulationState): void {
+    if (!state.energy.bloodGlucose) {
+      state.energy.bloodGlucose = {
+        currentValue: 85, // mg/dL - normal fasting baseline
+        baseline: 85,
+        peak: 85,
+        trend: 0,
+        lastMealTime: undefined,
+        lastMealGlycemicLoad: 0,
+        units: 'mg/dL',
+      };
+    }
+  }
+
+  /**
+   * Update blood glucose level - decay towards baseline
+   */
+  private updateBloodGlucose(state: SimulationState, dtMinutes: number): void {
+    this.initializeBloodGlucose(state);
+    const bg = state.energy.bloodGlucose;
+
+    // Natural decay towards baseline (insulin + glucose uptake)
+    const decayRate = 0.5; // mg/dL per minute when above baseline
+    if (bg.currentValue > bg.baseline) {
+      bg.currentValue = Math.max(
+        bg.baseline,
+        bg.currentValue - (decayRate * dtMinutes)
+      );
+    } else if (bg.currentValue < bg.baseline) {
+      // Gluconeogenesis raises low glucose
+      bg.currentValue = Math.min(
+        bg.baseline,
+        bg.currentValue + (0.2 * dtMinutes)
+      );
+    }
+
+    // Update trend
+    if (Math.abs(bg.currentValue - bg.baseline) < 2) {
+      bg.trend = 0; // Stable
+    } else if (bg.currentValue > bg.baseline) {
+      bg.trend = -1; // Falling (being corrected)
+    } else {
+      bg.trend = 1; // Rising (gluconeogenesis)
+    }
+
+    // Update peak if current is higher
+    if (bg.currentValue > bg.peak) {
+      bg.peak = bg.currentValue;
+    }
+  }
+
+  /**
+   * Calculate blood glucose response from a meal
+   */
+  private calculateBloodGlucoseResponse(meal: Meal): {
+    peak: number;
+    timeToPeak: number;
+    duration: number;
+  } {
+    const glycemicLoad = meal.glycemicLoad;
+    const carbs = meal.totalMacros.carbohydrates;
+    const fiber = meal.totalMacros.fiber || 0;
+    const fat = meal.totalMacros.fats;
+
+    // Peak glucose rise (mg/dL) based on glycemic load
+    // Rough approximation: GL * 2-3 mg/dL rise
+    const peak = Math.round(20 + (glycemicLoad * 2.5));
+
+    // Time to peak (minutes) - fat and fiber slow absorption
+    let timeToPeak = 30; // baseline
+    if (fat > 15) timeToPeak += 15;
+    if (fiber > 5) timeToPeak += 10;
+
+    // Duration (minutes) - how long glucose stays elevated
+    const duration = 120 + (timeToPeak / 2);
+
+    return { peak, timeToPeak, duration };
   }
 
   /**
@@ -412,6 +499,17 @@ export class FoodModule {
       this.modules.muscle?.setLeucineThreshold(state.muscle, true);
     }
 
+    // Initialize blood glucose if needed
+    this.initializeBloodGlucose(state);
+
+    // Calculate and apply blood glucose response
+    const bgResponse = this.calculateBloodGlucoseResponse(meal);
+    // Immediate glucose spike (simplified - in reality would be delayed)
+    state.energy.bloodGlucose.currentValue += bgResponse.peak * 0.3; // 30% immediate
+    state.energy.bloodGlucose.lastMealTime = state.gameTime;
+    state.energy.bloodGlucose.lastMealGlycemicLoad = meal.glycemicLoad;
+    state.energy.bloodGlucose.trend = 1; // Rising
+
     // Start digestion
     const digestionTime = this.calculateDigestionTime(meal);
     this.digestingMeals.push({
@@ -419,6 +517,9 @@ export class FoodModule {
       elapsedTime: 0,
       totalDigestionTime: digestionTime,
       absorbedMacros: { ...meal.totalMacros },
+      // Track remaining glucose to be absorbed
+      remainingGlucoseImpact: bgResponse.peak * 0.7, // 70% gradual
+      glucoseAbsorptionTime: bgResponse.timeToPeak,
     });
   }
 
@@ -528,8 +629,22 @@ export class FoodModule {
     const proteinAbsorption = Math.min(proteins, proteins * absorptionRate * (dtMinutes / 15));
     const fatAbsorption = Math.min(fats, fats * absorptionRate * (dtMinutes / 20));
 
-    // Note: In a full implementation, this would update blood glucose levels
-    // For now, we just reduce the remaining to be absorbed
+    // Update blood glucose during carbohydrate absorption
+    if (digesting.remainingGlucoseImpact && carbs > 0 && state.energy.bloodGlucose) {
+      // Calculate glucose absorption based on carb absorption rate
+      const glucoseAbsorption = (carbAbsorption / carbs) * digesting.remainingGlucoseImpact;
+      state.energy.bloodGlucose.currentValue += glucoseAbsorption;
+      digesting.remainingGlucoseImpact -= glucoseAbsorption;
+
+      // Update trend
+      if (digesting.elapsedTime < (digesting.glucoseAbsorptionTime || 30)) {
+        state.energy.bloodGlucose.trend = 1; // Rising towards peak
+      } else {
+        state.energy.bloodGlucose.trend = -1; // Falling after peak
+      }
+    }
+
+    // Reduce the remaining to be absorbed
     digesting.absorbedMacros.carbohydrates -= carbAbsorption;
     digesting.absorbedMacros.proteins -= proteinAbsorption;
     digesting.absorbedMacros.fats -= fatAbsorption;

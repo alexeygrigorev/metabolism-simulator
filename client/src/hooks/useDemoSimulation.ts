@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useSimulationStore } from '../state/store';
-import { getActiveEffect, HORMONE_BASELINES } from '../utils/demoSimulation';
+import { getActiveEffect, HORMONE_BASELINES, getCurrentBloodGlucose, getBloodGlucoseTrend } from '../utils/demoSimulation';
 
 let updateInterval: NodeJS.Timeout | null = null;
 
@@ -24,7 +24,7 @@ export function useDemoSimulation() {
     }
 
     // Update hormone values based on active effects
-    const updateHormones = () => {
+    const updateSimulation = () => {
       if (isUpdating.current || !state) return;
       isUpdating.current = true;
 
@@ -32,6 +32,7 @@ export function useDemoSimulation() {
         const hormones = { ...state.hormones };
         let hasChanges = false;
 
+        // Update hormones
         (Object.keys(hormones) as Array<keyof typeof hormones>).forEach((hormoneName) => {
           const hormone = hormones[hormoneName];
           const baseline = HORMONE_BASELINES[hormoneName]?.baseline || hormone.baseline;
@@ -62,8 +63,23 @@ export function useDemoSimulation() {
           }
         });
 
+        // Update blood glucose
+        const currentGlucose = getCurrentBloodGlucose();
+        const glucoseTrend = getBloodGlucoseTrend();
+        const baselineGlucose = state.energy.bloodGlucose?.baseline || 85;
+
+        if (state.energy.bloodGlucose && Math.abs(currentGlucose - state.energy.bloodGlucose.currentValue) > 0.5) {
+          hasChanges = true;
+          state.energy.bloodGlucose = {
+            ...state.energy.bloodGlucose,
+            currentValue: currentGlucose,
+            trend: glucoseTrend,
+            peak: Math.max(state.energy.bloodGlucose.peak, currentGlucose),
+          };
+        }
+
         if (hasChanges) {
-          setState({ ...state, hormones });
+          setState({ ...state, hormones, energy: state.energy });
         }
       } finally {
         isUpdating.current = false;
@@ -71,7 +87,7 @@ export function useDemoSimulation() {
     };
 
     // Update every 100ms for smooth hormone transitions
-    updateInterval = setInterval(updateHormones, 100);
+    updateInterval = setInterval(updateSimulation, 100);
 
     return () => {
       if (updateInterval) {
