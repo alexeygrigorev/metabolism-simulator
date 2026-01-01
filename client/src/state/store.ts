@@ -55,6 +55,7 @@ interface SimulationStore {
   // Actions
   setState: (state: SimulationState) => void;
   initialize: (userId: string) => Promise<void>;
+  updateUserProfile: (profile: Partial<UserProfile>) => void;
   setTimeScale: (scale: number) => void;
   setPaused: (paused: boolean) => void;
   togglePause: () => void;
@@ -220,6 +221,66 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
         loading: false,
       });
     }
+  },
+
+  updateUserProfile: (profile: Partial<UserProfile>) => {
+    const { state, addToast } = get();
+    if (!state) return;
+
+    // Mifflin-St Jeor BMR equation
+    const calculateBMR = (user: UserProfile): number => {
+      const { weight, height, age, biologicalSex } = user;
+      if (biologicalSex === BiologicalSex.Male) {
+        return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+      } else {
+        return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+      }
+    };
+
+    // Updated user profile - merge all properties
+    const updatedUser: UserProfile = {
+      id: state.user.id,
+      age: profile.age ?? state.user.age,
+      biologicalSex: profile.biologicalSex ?? state.user.biologicalSex,
+      weight: profile.weight ?? state.user.weight,
+      height: profile.height ?? state.user.height,
+      bodyFatPercentage: profile.bodyFatPercentage ?? state.user.bodyFatPercentage,
+      activityLevel: profile.activityLevel ?? state.user.activityLevel,
+      fitnessLevel: profile.fitnessLevel ?? state.user.fitnessLevel,
+    };
+
+    // Recalculate BMR and TDEE
+    const newBmr = calculateBMR(updatedUser);
+    const newTdee = newBmr * updatedUser.activityLevel;
+
+    // Recalculate body composition
+    const bodyFat = updatedUser.weight * updatedUser.bodyFatPercentage;
+    const leanMass = updatedUser.weight - bodyFat;
+
+    // Estimate skeletal muscle mass (approximately 45% of lean mass for average person)
+    const skeletalMuscleMass = leanMass * 0.45;
+    const totalMuscleMass = skeletalMuscleMass * 1.05; // Include smooth/cardiac muscle
+
+    // Update state with new profile and recalculated values
+    const updatedState: SimulationState = {
+      ...state,
+      user: updatedUser,
+      energy: {
+        ...state.energy,
+        bmr: newBmr,
+        tdee: newTdee,
+        bodyFat,
+        leanMass,
+      },
+      muscle: {
+        ...state.muscle,
+        totalMass: totalMuscleMass,
+        skeletalMuscleMass,
+      },
+    };
+
+    set({ state: updatedState });
+    addToast('Profile updated successfully', 'success');
   },
 
   setTimeScale: async (scale: number) => {

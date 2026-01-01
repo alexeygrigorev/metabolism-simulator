@@ -2,9 +2,13 @@
 // METABOLIC SIMULATOR - DEMO SIMULATION HOOK
 // ============================================================================
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useSimulationStore } from '../state/store';
 import { getActiveEffect, HORMONE_BASELINES, getCurrentBloodGlucose, getBloodGlucoseTrend } from '../utils/demoSimulation';
+
+// Configuration for performance optimization
+const UPDATE_INTERVAL = 200; // ms - reduced from 100ms for better CPU usage
+const MIN_CHANGE_THRESHOLD = 0.1; // Minimum value change to trigger update
 
 let updateInterval: NodeJS.Timeout | null = null;
 
@@ -12,6 +16,28 @@ export function useDemoSimulation() {
   const { state, connected, setState } = useSimulationStore();
   const previousHormones = useRef<Record<string, number>>({});
   const isUpdating = useRef(false);
+  const pendingStateUpdate = useRef<ReturnType<typeof useSimulationStore>['state'] | null>(null);
+  const stateUpdateScheduled = useRef(false);
+
+  // Throttled state update using requestAnimationFrame for smoother renders
+  const scheduleStateUpdate = useCallback((newState: typeof state) => {
+    if (stateUpdateScheduled.current) {
+      // Keep the most recent pending state
+      pendingStateUpdate.current = newState;
+      return;
+    }
+
+    pendingStateUpdate.current = newState;
+    stateUpdateScheduled.current = true;
+
+    requestAnimationFrame(() => {
+      if (pendingStateUpdate.current) {
+        setState(pendingStateUpdate.current);
+        pendingStateUpdate.current = null;
+      }
+      stateUpdateScheduled.current = false;
+    });
+  }, [setState]);
 
   useEffect(() => {
     // Don't run demo simulation when connected to real server
@@ -41,8 +67,8 @@ export function useDemoSimulation() {
           const effectValue = getActiveEffect(hormoneName);
           const newValue = effectValue ?? baseline;
 
-          // Check if value changed
-          if (Math.abs(newValue - hormone.currentValue) > 0.01) {
+          // Check if value changed significantly
+          if (Math.abs(newValue - hormone.currentValue) > MIN_CHANGE_THRESHOLD) {
             hasChanges = true;
 
             // Calculate trend
@@ -66,7 +92,6 @@ export function useDemoSimulation() {
         // Update blood glucose
         const currentGlucose = getCurrentBloodGlucose();
         const glucoseTrend = getBloodGlucoseTrend();
-        const baselineGlucose = state.energy.bloodGlucose?.baseline || 85;
 
         if (state.energy.bloodGlucose && Math.abs(currentGlucose - state.energy.bloodGlucose.currentValue) > 0.5) {
           hasChanges = true;
@@ -78,16 +103,17 @@ export function useDemoSimulation() {
           };
         }
 
+        // Only schedule state update if there are meaningful changes
         if (hasChanges) {
-          setState({ ...state, hormones, energy: state.energy });
+          scheduleStateUpdate({ ...state, hormones, energy: state.energy });
         }
       } finally {
         isUpdating.current = false;
       }
     };
 
-    // Update every 100ms for smooth hormone transitions
-    updateInterval = setInterval(updateSimulation, 100);
+    // Optimized update interval for better performance
+    updateInterval = setInterval(updateSimulation, UPDATE_INTERVAL);
 
     return () => {
       if (updateInterval) {
@@ -95,5 +121,5 @@ export function useDemoSimulation() {
         updateInterval = null;
       }
     };
-  }, [state, connected, setState]);
+  }, [state, connected, scheduleStateUpdate]);
 }
