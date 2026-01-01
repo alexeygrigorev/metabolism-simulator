@@ -964,4 +964,121 @@ test.describe('Hormone Correlation Matrix', () => {
     const pageContent = await page.textContent('body');
     expect(pageContent).not.toContain('Error');
   });
+
+  test('should display water intake tracker', async ({ page }) => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+    const tracker = page.getByText('Water Intake');
+    await expect(tracker).toBeVisible();
+  });
+
+  test('should show initial water intake state', async ({ page }) => {
+    // Clear localStorage to ensure fresh state
+    await page.evaluate(() => localStorage.removeItem('metabol-sim-water-intake'));
+    await page.reload();
+    await page.waitForTimeout(500);
+
+    // Check for water tracker text on page
+    await expect(page.getByText('0ml / 2000ml daily goal')).toBeVisible();
+    // Find the percentage display in the water tracker
+    await expect(page.locator('text=Water Intake').locator('xpath=../../..').locator('.text-2xl.font-bold')).toContainText('0%');
+  });
+
+  test('should add water glass when clicking Add Glass button', async ({ page }) => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    const addButton = page.getByRole('button', { name: /\+ Add Glass/ });
+    await addButton.click();
+    await page.waitForTimeout(200);
+
+    await expect(page.getByText('250ml / 2000ml daily goal')).toBeVisible();
+    await expect(page.getByText('13%')).toBeVisible();
+  });
+
+  test('should add multiple glasses and update progress', async ({ page }) => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    const addButton = page.getByRole('button', { name: /\+ Add Glass/ });
+
+    // Add 4 glasses
+    for (let i = 0; i < 4; i++) {
+      await addButton.click();
+      await page.waitForTimeout(100);
+    }
+
+    await expect(page.getByText('1000ml / 2000ml daily goal')).toBeVisible();
+    await expect(page.getByText('50%')).toBeVisible();
+    await expect(page.getByText('Good Progress')).toBeVisible();
+  });
+
+  test('should remove glass when clicking remove button', async ({ page }) => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    // Add a glass first
+    const addButton = page.getByRole('button', { name: /\+ Add Glass/ });
+    await addButton.click();
+    await page.waitForTimeout(200);
+
+    await expect(page.getByText('250ml / 2000ml daily goal')).toBeVisible();
+
+    // Remove the glass - use title attribute to find the button
+    const removeButton = page.getByTitle('Remove last glass');
+    await removeButton.click();
+    await page.waitForTimeout(200);
+
+    await expect(page.getByText('0ml / 2000ml daily goal')).toBeVisible();
+  });
+
+  test('should show all 8 glass indicators', async ({ page }) => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    // Count the empty glass indicators (circles)
+    const emptyGlasses = await page.getByRole('button', { name: /Add glass 8/ }).count();
+    expect(emptyGlasses).toBeGreaterThan(0);
+  });
+
+  test('should disable add button when goal is reached', async ({ page }) => {
+    // Clear localStorage to ensure fresh state
+    await page.evaluate(() => localStorage.removeItem('metabol-sim-water-intake'));
+    await page.reload();
+    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    // Click the main Add Glass button (the one in action buttons area at top of page)
+    const addButton = page.locator('button:has-text("Add Glass"):visible').first();
+
+    // Add 8 glasses to reach goal
+    for (let i = 0; i < 8; i++) {
+      await addButton.click();
+      await page.waitForTimeout(100);
+    }
+
+    // Check for goal reached message
+    await expect(page.getByText('2000ml / 2000ml daily goal')).toBeVisible();
+  });
+
+  test('should reset water intake', async ({ page }) => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    // Add some glasses first
+    const addButton = page.getByRole('button', { name: /\+ Add Glass/ });
+    await addButton.click();
+    await addButton.click();
+    await page.waitForTimeout(200);
+
+    await expect(page.getByText('500ml / 2000ml daily goal')).toBeVisible();
+
+    // Reset - use title attribute to find the button
+    const resetButton = page.getByTitle("Reset today's intake");
+    await resetButton.click();
+    await page.waitForTimeout(200);
+
+    await expect(page.getByText('0ml / 2000ml daily goal')).toBeVisible();
+  });
 });

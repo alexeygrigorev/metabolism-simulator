@@ -22,6 +22,7 @@ import ActiveScenarioPanel from '../scenarios/ActiveScenarioPanel';
 import ScenarioSelector from '../scenarios/ScenarioSelector';
 import ActionButtons from './ActionButtons';
 import BloodGlucosePanel from './BloodGlucosePanel';
+import WaterTracker from './WaterTracker';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import HormoneEducationHub from '../education/HormoneEducationHub';
@@ -215,6 +216,9 @@ function Dashboard() {
 
       {/* Top row - Profile + Quick Stats */}
       <ProfileStatsRow />
+
+      {/* Water Intake Tracker */}
+      <WaterTracker />
 
       {/* Health Alerts - Real-time monitoring */}
       <div id="health-alerts-panel">
