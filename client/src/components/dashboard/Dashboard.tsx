@@ -26,11 +26,13 @@ import HealthMarkersPanel from './HealthMarkersPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import HormoneEducationHub from '../education/HormoneEducationHub';
 import MetabolicInsightsDashboard from '../insights/MetabolicInsightsDashboard';
+import HealthAlertsPanel from './HealthAlertsPanel';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
+import { useHealthAlerts } from '../../hooks/useHealthAlerts';
 
 type ViewMode = 'dashboard' | 'scenarios';
 
-// Memoized header section with action buttons
+// Memoized header section with action buttons and alert badge
 const DashboardHeader = memo(function DashboardHeader({
   activeScenario,
   onScenarioToggle,
@@ -42,9 +44,30 @@ const DashboardHeader = memo(function DashboardHeader({
   onEducationOpen: () => void;
   onInsightsOpen: () => void;
 }) {
+  const { hasCriticalAlerts, hasWarningAlerts, alertCounts } = useHealthAlerts();
+
   return (
     <div className="flex items-center justify-between flex-wrap gap-4">
-      <ActionButtons />
+      <div className="flex items-center gap-4">
+        <ActionButtons />
+        {/* Alert indicator */}
+        {alertCounts.total > 0 && (
+          <button
+            onClick={() => document.getElementById('health-alerts-panel')?.scrollIntoView({ behavior: 'smooth' })}
+            className={`px-3 py-1.5 rounded-lg border transition-all hover:scale-105 ${
+              hasCriticalAlerts
+                ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse'
+                : hasWarningAlerts
+                  ? 'bg-orange-500/20 border-orange-500/50 text-orange-400'
+                  : 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400'
+            }`}
+            title="View health alerts"
+          >
+            <span className="text-sm">🔔</span>
+            <span className="font-semibold">{alertCounts.total}</span>
+          </button>
+        )}
+      </div>
       <div className="flex items-center gap-2">
         <button
           onClick={onInsightsOpen}
@@ -192,6 +215,11 @@ function Dashboard() {
 
       {/* Top row - Profile + Quick Stats */}
       <ProfileStatsRow />
+
+      {/* Health Alerts - Real-time monitoring */}
+      <div id="health-alerts-panel">
+        <HealthAlertsPanel showEmpty={false} />
+      </div>
 
       {/* Personalized Recommendations */}
       <RecommendationsPanel />
