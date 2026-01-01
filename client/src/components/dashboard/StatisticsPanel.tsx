@@ -68,6 +68,13 @@ function saveStatistics(data: StatisticsData) {
   }
 }
 
+// Move tabs array outside component to avoid recreation on each render
+const TABS = [
+  { id: 'overview' as const, name: 'Overview' },
+  { id: 'trends' as const, name: 'Trends' },
+  { id: 'records' as const, name: 'Records' },
+] as const;
+
 const StatisticsPanel = memo(function StatisticsPanel() {
   const { state } = useSimulationStore();
   const [stats, setStats] = useState<StatisticsData>(loadStatistics);
@@ -167,11 +174,7 @@ const StatisticsPanel = memo(function StatisticsPanel() {
 
         {/* Tab Navigation */}
         <div className="flex gap-1 bg-slate-900/50 rounded-lg p-1">
-          {[
-            { id: 'overview', name: 'Overview' },
-            { id: 'trends', name: 'Trends' },
-            { id: 'records', name: 'Records' },
-          ].map((tab) => (
+          {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedTab(tab.id as any)}

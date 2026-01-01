@@ -6,36 +6,37 @@ import { useSimulationStore } from '../../state/store';
 import { selectSubstrateUtilization } from '../../state/selectors';
 import { memo } from 'react';
 
-// Get metabolic state description and color
+// State definitions moved outside component to avoid recreation
+const METABOLIC_STATES: Record<string, { label: string; description: string; color: string }> = {
+  fasted: {
+    label: 'Fasted',
+    description: 'Primary fat oxidation, ketone production may increase',
+    color: 'bg-yellow-500',
+  },
+  postprandial: {
+    label: 'Postprandial',
+    description: 'Glucose primary fuel, fat oxidation suppressed',
+    color: 'bg-cyan-500',
+  },
+  exercise: {
+    label: 'Exercise',
+    description: 'Mixed fuel use based on intensity',
+    color: 'bg-orange-500',
+  },
+  recovery: {
+    label: 'Recovery',
+    description: 'Glycogen repletion, elevated glucose uptake',
+    color: 'bg-green-500',
+  },
+  sleep: {
+    label: 'Sleep',
+    description: 'Primary fat oxidation, repair processes active',
+    color: 'bg-indigo-500',
+  },
+};
+
 function getStateInfo(state: string) {
-  const states: Record<string, { label: string; description: string; color: string }> = {
-    fasted: {
-      label: 'Fasted',
-      description: 'Primary fat oxidation, ketone production may increase',
-      color: 'bg-yellow-500',
-    },
-    postprandial: {
-      label: 'Postprandial',
-      description: 'Glucose primary fuel, fat oxidation suppressed',
-      color: 'bg-cyan-500',
-    },
-    exercise: {
-      label: 'Exercise',
-      description: 'Mixed fuel use based on intensity',
-      color: 'bg-orange-500',
-    },
-    recovery: {
-      label: 'Recovery',
-      description: 'Glycogen repletion, elevated glucose uptake',
-      color: 'bg-green-500',
-    },
-    sleep: {
-      label: 'Sleep',
-      description: 'Primary fat oxidation, repair processes active',
-      color: 'bg-indigo-500',
-    },
-  };
-  return states[state] || { label: state, description: '', color: 'bg-slate-500' };
+  return METABOLIC_STATES[state] || { label: state, description: '', color: 'bg-slate-500' };
 }
 
 const SubstrateUtilization = memo(function SubstrateUtilization() {

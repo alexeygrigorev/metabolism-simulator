@@ -53,6 +53,20 @@ const typeColors = {
   stress: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
+// Moved outside component to avoid recreation on each render
+function formatTime(timestamp: string) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return date.toLocaleDateString();
+}
+
 const ActivityLog = memo(function ActivityLog() {
   // Use stable selector - only re-renders when activities change
   const { meals, exercises, sleep } = useSimulationStore(selectActivities);
@@ -122,19 +136,6 @@ const ActivityLog = memo(function ActivityLog() {
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     ).slice(0, 10); // Show last 10 activities
   }, [meals, exercises, sleep]);
-
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString();
-  };
 
   if (activities.length === 0) {
     return (

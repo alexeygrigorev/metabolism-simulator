@@ -2,7 +2,7 @@
 // METABOLIC SIMULATOR - DAILY GOALS PANEL COMPONENT
 // ============================================================================
 
-import { memo, useState } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { useSimulationStore } from '../../state/store';
 import { DAILY_GOALS, getGoalProgress, GOAL_CATEGORIES, DailyGoal } from '../../data/dailyGoals';
 
@@ -11,13 +11,24 @@ const DailyGoals = memo(function DailyGoals() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
 
-  const filteredGoals = DAILY_GOALS.filter(
-    (goal) => selectedCategory === 'all' || goal.category === selectedCategory
+  // Memoize filtered goals to avoid recalculation on every render
+  const filteredGoals = useMemo(
+    () => DAILY_GOALS.filter(
+      (goal) => selectedCategory === 'all' || goal.category === selectedCategory
+    ),
+    [selectedCategory]
   );
 
-  const totalGoals = filteredGoals.length;
-  const completedGoals = filteredGoals.filter((goal) => getGoalProgress(goal, state).complete).length;
-  const overallProgress = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+  // Memoize progress calculations
+  const { totalGoals, completedGoals, overallProgress } = useMemo(() => {
+    const total = filteredGoals.length;
+    const completed = filteredGoals.filter((goal) => getGoalProgress(goal, state).complete).length;
+    return {
+      totalGoals: total,
+      completedGoals: completed,
+      overallProgress: total > 0 ? Math.round((completed / total) * 100) : 0,
+    };
+  }, [filteredGoals, state]);
 
   const GoalCard = memo(function GoalCard({ goal }: { goal: DailyGoal }) {
     const progress = getGoalProgress(goal, state);

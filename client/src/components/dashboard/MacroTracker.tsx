@@ -4,7 +4,15 @@
 
 import { useSimulationStore } from '../../state/store';
 import { selectEnergy } from '../../state/selectors';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
+
+// Static macro definitions - moved outside component to avoid recreation
+type MacroKey = 'carbohydrates' | 'proteins' | 'fats';
+const MACRO_DEFINITIONS = [
+  { name: 'Carbs', key: 'carbohydrates' as MacroKey, color: 'bg-blue-500' },
+  { name: 'Protein', key: 'proteins' as MacroKey, color: 'bg-green-500' },
+  { name: 'Fat', key: 'fats' as MacroKey, color: 'bg-yellow-500' },
+] as const;
 
 const MacroTracker = memo(function MacroTracker() {
   // Use stable selector - only re-renders when energy data changes
@@ -12,11 +20,14 @@ const MacroTracker = memo(function MacroTracker() {
 
   if (!energy) return null;
 
-  const macros = [
-    { name: 'Carbs', key: 'carbohydrates' as const, color: 'bg-blue-500', target: energy.carbohydrates.target },
-    { name: 'Protein', key: 'proteins' as const, color: 'bg-green-500', target: energy.proteins.target },
-    { name: 'Fat', key: 'fats' as const, color: 'bg-yellow-500', target: energy.fats.target },
-  ];
+  // Memoize macros with their targets to avoid array recreation
+  const macros = useMemo(() =>
+    MACRO_DEFINITIONS.map(def => ({
+      ...def,
+      target: energy[def.key].target,
+    })),
+    [energy.carbohydrates.target, energy.proteins.target, energy.fats.target]
+  );
 
   return (
     <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">

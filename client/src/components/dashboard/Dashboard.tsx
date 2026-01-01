@@ -2,7 +2,7 @@
 // METABOLIC SIMULATOR - DASHBOARD COMPONENT
 // ============================================================================
 
-import { useState, memo } from 'react';
+import { useState, memo, lazy, Suspense } from 'react';
 import { useSimulationStore } from '../../state/store';
 import useScenarioStore from '../../state/scenarioStore';
 import { Scenario } from '../../data/scenarios';
@@ -23,13 +23,59 @@ import ScenarioSelector from '../scenarios/ScenarioSelector';
 import ActionButtons from './ActionButtons';
 import BloodGlucosePanel from './BloodGlucosePanel';
 import WaterTracker from './WaterTracker';
+import ExerciseHistoryPanel from './ExerciseHistoryPanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import RecommendationsPanel from './RecommendationsPanel';
-import HormoneEducationHub from '../education/HormoneEducationHub';
-import MetabolicInsightsDashboard from '../insights/MetabolicInsightsDashboard';
 import HealthAlertsPanel from './HealthAlertsPanel';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
 import { useHealthAlerts } from '../../hooks/useHealthAlerts';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
+
+// Code splitting for heavy modal components - loaded only when needed
+const ExerciseBuilder = lazy(() => import('./ExerciseBuilder'));
+const HormoneEducationHub = lazy(() => import('../education/HormoneEducationHub'));
+const MetabolicInsightsDashboard = lazy(() => import('../insights/MetabolicInsightsDashboard'));
+
+// Loading fallback component
+const ModalLoadingFallback = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="bg-slate-800 rounded-xl border border-slate-700 p-8 flex items-center gap-3">
+      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <span className="text-white">Loading...</span>
+    </div>
+  </div>
+);
+
+// Error fallback for dashboard sections
+const SectionErrorFallback = ({ sectionName, onReset }: { sectionName: string; onReset?: () => void }) => (
+  <div className="bg-slate-800/50 rounded-lg border border-red-500/50 p-6">
+    <div className="flex items-center gap-3 text-red-400 mb-2">
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+      <span className="font-medium">Unable to load {sectionName}</span>
+    </div>
+    <p className="text-sm text-slate-400 mb-3">This section encountered an error and could not be displayed.</p>
+    {onReset && (
+      <button
+        onClick={onReset}
+        className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+      >
+        Try again
+      </button>
+    )}
+  </div>
+);
+
+// Error boundary wrapper for dashboard sections
+const SectionBoundary = ({ children, sectionName }: { children: React.ReactNode; sectionName: string }) => (
+  <ErrorBoundary
+    fallback={<SectionErrorFallback sectionName={sectionName} />}
+    onError={(error) => console.error(`Error in ${sectionName}:`, error)}
+  >
+    {children}
+  </ErrorBoundary>
+);
 
 type ViewMode = 'dashboard' | 'scenarios';
 
@@ -142,6 +188,28 @@ const ActivitySection = memo(function ActivitySection() {
   );
 });
 
+// Memoized exercise section with history and log button
+const ExerciseSection = memo(function ExerciseSection({ onOpenExerciseBuilder }: { onOpenExerciseBuilder: () => void }) {
+  return (
+    <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">💪</span>
+          <h2 className="text-lg font-semibold text-white">Workouts</h2>
+        </div>
+        <button
+          onClick={onOpenExerciseBuilder}
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors flex items-center gap-2"
+        >
+          <span>+</span>
+          <span>Log Workout</span>
+        </button>
+      </div>
+      <ExerciseHistoryPanel showEmpty={false} maxSessions={3} />
+    </div>
+  );
+});
+
 // Memoized nutrition stats row
 const NutritionStatsRow = memo(function NutritionStatsRow() {
   return (
@@ -172,6 +240,7 @@ function Dashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [showEducationHub, setShowEducationHub] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [showExerciseBuilder, setShowExerciseBuilder] = useState(false);
 
   if (!state) {
     return (
@@ -232,7 +301,9 @@ function Dashboard() {
       <NutritionStatsRow />
 
       {/* Health Markers - Comprehensive blood work and vitals */}
-      <HealthMarkersPanel />
+      <SectionBoundary sectionName="Health Markers">
+        <HealthMarkersPanel />
+      </SectionBoundary>
 
       {/* Hormone charts */}
       <HormoneGrid />
@@ -243,24 +314,40 @@ function Dashboard() {
       {/* Bottom row - Activity Log + Substrate Utilization */}
       <ActivitySection />
 
+      {/* Exercise section with workout history and log button */}
+      <ExerciseSection onOpenExerciseBuilder={() => setShowExerciseBuilder(true)} />
+
       {/* Daily Goals */}
       <DailyGoals />
 
       {/* Statistics */}
-      <StatisticsPanel />
+      <SectionBoundary sectionName="Statistics & Trends">
+        <StatisticsPanel />
+      </SectionBoundary>
 
       {/* Hormone Insights */}
       <HormoneInsights />
     </div>
 
-    {/* Education Hub Modal */}
+    {/* Education Hub Modal - lazy loaded */}
     {showEducationHub && (
-      <HormoneEducationHub onClose={() => setShowEducationHub(false)} />
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <HormoneEducationHub onClose={() => setShowEducationHub(false)} />
+      </Suspense>
     )}
 
-    {/* Metabolic Insights Modal */}
+    {/* Metabolic Insights Modal - lazy loaded */}
     {showInsights && (
-      <MetabolicInsightsDashboard onClose={() => setShowInsights(false)} />
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <MetabolicInsightsDashboard onClose={() => setShowInsights(false)} />
+      </Suspense>
+    )}
+
+    {/* Exercise Builder Modal - lazy loaded */}
+    {showExerciseBuilder && (
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <ExerciseBuilder isOpen={showExerciseBuilder} onClose={() => setShowExerciseBuilder(false)} />
+      </Suspense>
     )}
   </>
   );
