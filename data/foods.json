@@ -1,0 +1,268 @@
+{
+  "foods": [
+    {
+      "id": "riceWhite",
+      "name": "White Rice (cooked)",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 28, "proteins": 2.7, "fats": 0.3, "fiber": 0.4, "water": 65 },
+      "glycemicIndex": 73,
+      "glycemicLoad": 20,
+      "leucineContent": 0.15,
+      "insulinIndex": 65
+    },
+    {
+      "id": "riceBrown",
+      "name": "Brown Rice (cooked)",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 23, "proteins": 2.6, "fats": 0.9, "fiber": 1.8, "water": 70 },
+      "glycemicIndex": 68,
+      "glycemicLoad": 16,
+      "leucineContent": 0.14,
+      "insulinIndex": 55
+    },
+    {
+      "id": "oats",
+      "name": "Oats (cooked)",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 12, "proteins": 2.5, "fats": 1.5, "fiber": 1.7, "water": 80 },
+      "glycemicIndex": 55,
+      "glycemicLoad": 7,
+      "leucineContent": 0.13,
+      "insulinIndex": 45
+    },
+    {
+      "id": "potato",
+      "name": "Potato (baked)",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 21, "proteins": 2, "fats": 0.1, "fiber": 2.2, "water": 75 },
+      "glycemicIndex": 85,
+      "glycemicLoad": 18,
+      "leucineContent": 0.1,
+      "insulinIndex": 75
+    },
+    {
+      "id": "sweetPotato",
+      "name": "Sweet Potato (baked)",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 20, "proteins": 1.6, "fats": 0.1, "fiber": 3, "water": 75 },
+      "glycemicIndex": 61,
+      "glycemicLoad": 12,
+      "leucineContent": 0.08,
+      "insulinIndex": 55
+    },
+    {
+      "id": "banana",
+      "name": "Banana",
+      "category": "fruits",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 23, "proteins": 1.1, "fats": 0.3, "fiber": 2.6, "water": 74 },
+      "glycemicIndex": 51,
+      "glycemicLoad": 12,
+      "leucineContent": 0.07,
+      "insulinIndex": 50
+    },
+    {
+      "id": "breadWhite",
+      "name": "White Bread",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 49, "proteins": 9, "fats": 3.2, "fiber": 2.7, "water": 35 },
+      "glycemicIndex": 75,
+      "glycemicLoad": 37,
+      "leucineContent": 0.5,
+      "insulinIndex": 70
+    },
+    {
+      "id": "breadWhole",
+      "name": "Whole Wheat Bread",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 41, "proteins": 13, "fats": 3.5, "fiber": 7, "water": 35 },
+      "glycemicIndex": 53,
+      "glycemicLoad": 22,
+      "leucineContent": 0.7,
+      "insulinIndex": 55
+    },
+    {
+      "id": "pasta",
+      "name": "Pasta (cooked)",
+      "category": "carbohydrates",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 25, "proteins": 5, "fats": 0.5, "fiber": 1.5, "water": 68 },
+      "glycemicIndex": 50,
+      "glycemicLoad": 13,
+      "leucineContent": 0.25,
+      "insulinIndex": 50
+    },
+    {
+      "id": "chickenBreast",
+      "name": "Chicken Breast",
+      "category": "proteins",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 0, "proteins": 31, "fats": 3.6, "fiber": 0, "water": 65 },
+      "glycemicIndex": 0,
+      "glycemicLoad": 0,
+      "leucineContent": 2.4,
+      "insulinIndex": 30
+    },
+    {
+      "id": "beef",
+      "name": "Beef (lean)",
+      "category": "proteins",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 0, "proteins": 26, "fats": 10, "fiber": 0, "water": 60 },
+      "glycemicIndex": 0,
+      "glycemicLoad": 0,
+      "leucineContent": 2.0,
+      "insulinIndex": 25
+    },
+    {
+      "id": "salmon",
+      "name": "Salmon",
+      "category": "proteins",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 0, "proteins": 25, "fats": 13, "fiber": 0, "water": 60 },
+      "glycemicIndex": 0,
+      "glycemicLoad": 0,
+      "leucineContent": 1.9,
+      "insulinIndex": 20
+    },
+    {
+      "id": "eggs",
+      "name": "Eggs (2 large)",
+      "category": "proteins",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 1.1, "proteins": 13, "fats": 10, "fiber": 0, "water": 75 },
+      "glycemicIndex": 0,
+      "glycemicLoad": 0,
+      "leucineContent": 1.1,
+      "insulinIndex": 25
+    },
+    {
+      "id": "wheyProtein",
+      "name": "Whey Protein Powder",
+      "category": "supplements",
+      "servingSize": 30,
+      "macros": { "carbohydrates": 3, "proteins": 24, "fats": 1, "fiber": 0, "water": 0 },
+      "glycemicIndex": 30,
+      "glycemicLoad": 1,
+      "leucineContent": 2.6,
+      "insulinIndex": 70
+    },
+    {
+      "id": "caseinProtein",
+      "name": "Casein Protein Powder",
+      "category": "supplements",
+      "servingSize": 30,
+      "macros": { "carbohydrates": 3, "proteins": 24, "fats": 1, "fiber": 0, "water": 0 },
+      "glycemicIndex": 25,
+      "glycemicLoad": 1,
+      "leucineContent": 2.0,
+      "insulinIndex": 40
+    },
+    {
+      "id": "tofu",
+      "name": "Tofu",
+      "category": "proteins",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 1.9, "proteins": 8, "fats": 4.8, "fiber": 0.9, "water": 85 },
+      "glycemicIndex": 15,
+      "glycemicLoad": 0,
+      "leucineContent": 0.6,
+      "insulinIndex": 20
+    },
+    {
+      "id": "greekYogurt",
+      "name": "Greek Yogurt",
+      "category": "dairy",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 4, "proteins": 10, "fats": 4, "fiber": 0, "water": 80 },
+      "glycemicIndex": 11,
+      "glycemicLoad": 0,
+      "leucineContent": 0.9,
+      "insulinIndex": 35
+    },
+    {
+      "id": "avocado",
+      "name": "Avocado",
+      "category": "fats",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 9, "proteins": 2, "fats": 15, "fiber": 7, "water": 73 },
+      "glycemicIndex": 15,
+      "glycemicLoad": 1,
+      "leucineContent": 0.1,
+      "insulinIndex": 10
+    },
+    {
+      "id": "oliveOil",
+      "name": "Olive Oil",
+      "category": "fats",
+      "servingSize": 15,
+      "macros": { "carbohydrates": 0, "proteins": 0, "fats": 14, "fiber": 0, "water": 0 },
+      "glycemicIndex": 0,
+      "glycemicLoad": 0,
+      "leucineContent": 0,
+      "insulinIndex": 5
+    },
+    {
+      "id": "almonds",
+      "name": "Almonds",
+      "category": "nutsSeeds",
+      "servingSize": 30,
+      "macros": { "carbohydrates": 6, "proteins": 6, "fats": 14, "fiber": 3.5, "water": 2 },
+      "glycemicIndex": 0,
+      "glycemicLoad": 0,
+      "leucineContent": 0.4,
+      "insulinIndex": 15
+    },
+    {
+      "id": "broccoli",
+      "name": "Broccoli",
+      "category": "vegetables",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 7, "proteins": 3, "fats": 0.4, "fiber": 2.6, "water": 89 },
+      "glycemicIndex": 10,
+      "glycemicLoad": 1,
+      "leucineContent": 0.15,
+      "insulinIndex": 5
+    },
+    {
+      "id": "spinach",
+      "name": "Spinach",
+      "category": "vegetables",
+      "servingSize": 100,
+      "macros": { "carbohydrates": 4, "proteins": 3, "fats": 0.4, "fiber": 2.2, "water": 91 },
+      "glycemicIndex": 15,
+      "glycemicLoad": 0,
+      "leucineContent": 0.12,
+      "insulinIndex": 5
+    },
+    {
+      "id": "orangeJuice",
+      "name": "Orange Juice",
+      "category": "beverages",
+      "servingSize": 250,
+      "macros": { "carbohydrates": 26, "proteins": 2, "fats": 0.5, "fiber": 0.5, "water": 88 },
+      "glycemicIndex": 50,
+      "glycemicLoad": 13,
+      "leucineContent": 0.08,
+      "insulinIndex": 55
+    },
+    {
+      "id": "milk",
+      "name": "Milk (whole)",
+      "category": "dairy",
+      "servingSize": 250,
+      "macros": { "carbohydrates": 12, "proteins": 8, "fats": 8, "fiber": 0, "water": 87 },
+      "glycemicIndex": 27,
+      "glycemicLoad": 3,
+      "leucineContent": 0.7,
+      "insulinIndex": 45
+    }
+  ]
+}

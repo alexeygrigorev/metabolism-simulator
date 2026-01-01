@@ -1,0 +1,160 @@
+{
+  "exercises": [
+    {
+      "id": "squat",
+      "name": "Barbell Squat",
+      "category": "resistance",
+      "met": 5.0,
+      "load": 20,
+      "primaryMuscles": ["quadriceps", "glutes", "hamstrings"],
+      "mechanicalActivation": 0.9
+    },
+    {
+      "id": "deadlift",
+      "name": "Deadlift",
+      "category": "resistance",
+      "met": 6.0,
+      "load": 100,
+      "primaryMuscles": ["quadriceps", "glutes", "hamstrings", "lowerBack", "traps"],
+      "mechanicalActivation": 0.95
+    },
+    {
+      "id": "benchPress",
+      "name": "Bench Press",
+      "category": "resistance",
+      "met": 4.0,
+      "load": 60,
+      "primaryMuscles": ["chest", "triceps", "shoulders"],
+      "mechanicalActivation": 0.85
+    },
+    {
+      "id": "overheadPress",
+      "name": "Overhead Press",
+      "category": "resistance",
+      "met": 4.5,
+      "load": 40,
+      "primaryMuscles": ["shoulders", "triceps"],
+      "mechanicalActivation": 0.8
+    },
+    {
+      "id": "barbellRow",
+      "name": "Barbell Row",
+      "category": "resistance",
+      "met": 5.0,
+      "load": 50,
+      "primaryMuscles": ["back", "biceps", "lats"],
+      "mechanicalActivation": 0.85
+    },
+    {
+      "id": "pullup",
+      "name": "Pull-up",
+      "category": "resistance",
+      "met": 4.0,
+      "load": 0,
+      "primaryMuscles": ["lats", "biceps", "forearms"],
+      "mechanicalActivation": 0.8
+    },
+    {
+      "id": "bicepCurl",
+      "name": "Bicep Curl",
+      "category": "resistance",
+      "met": 2.5,
+      "load": 20,
+      "primaryMuscles": ["biceps"],
+      "mechanicalActivation": 0.5
+    },
+    {
+      "id": "tricepExtension",
+      "name": "Tricep Extension",
+      "category": "resistance",
+      "met": 2.5,
+      "load": 20,
+      "primaryMuscles": ["triceps"],
+      "mechanicalActivation": 0.5
+    },
+    {
+      "id": "legPress",
+      "name": "Leg Press",
+      "category": "resistance",
+      "met": 4.0,
+      "load": 100,
+      "primaryMuscles": ["quadriceps", "glutes"],
+      "mechanicalActivation": 0.7
+    },
+    {
+      "id": "pushup",
+      "name": "Push-up",
+      "category": "resistance",
+      "met": 3.5,
+      "load": 0,
+      "primaryMuscles": ["chest", "triceps", "shoulders"],
+      "mechanicalActivation": 0.6
+    },
+    {
+      "id": "lunge",
+      "name": "Lunge",
+      "category": "resistance",
+      "met": 3.5,
+      "load": 0,
+      "primaryMuscles": ["quadriceps", "glutes", "hamstrings"],
+      "mechanicalActivation": 0.7
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "category": "resistance",
+      "met": 2.5,
+      "load": 0,
+      "primaryMuscles": ["abs", "lowerBack"],
+      "mechanicalActivation": 0.3
+    },
+    {
+      "id": "running",
+      "name": "Running (8 km/h)",
+      "category": "cardio",
+      "met": 8.0,
+      "primaryMuscles": [],
+      "mechanicalActivation": 0.1
+    },
+    {
+      "id": "cycling",
+      "name": "Cycling (moderate)",
+      "category": "cardio",
+      "met": 7.0,
+      "primaryMuscles": ["quadriceps", "glutes", "hamstrings"],
+      "mechanicalActivation": 0.15
+    },
+    {
+      "id": "swimming",
+      "name": "Swimming (moderate)",
+      "category": "cardio",
+      "met": 7.5,
+      "primaryMuscles": [],
+      "mechanicalActivation": 0.1
+    },
+    {
+      "id": "walking",
+      "name": "Brisk Walking",
+      "category": "cardio",
+      "met": 4.0,
+      "primaryMuscles": [],
+      "mechanicalActivation": 0.05
+    },
+    {
+      "id": "hiitSprinting",
+      "name": "HIIT Sprinting",
+      "category": "hiit",
+      "met": 12.0,
+      "primaryMuscles": ["quadriceps", "glutes", "hamstrings"],
+      "mechanicalActivation": 0.2
+    },
+    {
+      "id": "hiitBurpees",
+      "name": "HIIT Burpees",
+      "category": "hiit",
+      "met": 10.0,
+      "primaryMuscles": ["chest", "quadriceps", "glutes", "abs"],
+      "mechanicalActivation": 0.3
+    }
+  ]
+}
