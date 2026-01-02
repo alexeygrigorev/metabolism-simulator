@@ -221,7 +221,22 @@ export const DAILY_GOALS: DailyGoal[] = [
     target: 8,
     unit: 'glasses',
     getCurrentValue: () => {
-      // This would be tracked separately - for now return a placeholder
+      // Track hydration in localStorage
+      const HYDRATION_KEY = 'metabol-sim-hydration';
+      const today = new Date().toDateString();
+
+      try {
+        const saved = localStorage.getItem(HYDRATION_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          // Reset if it's a new day
+          if (data.date === today) {
+            return data.glasses || 0;
+          }
+        }
+      } catch {
+        // If localStorage fails, return 0
+      }
       return 0;
     },
     advice: '8 glasses (2L) daily baseline, more when active',
@@ -236,8 +251,24 @@ export const DAILY_GOALS: DailyGoal[] = [
     target: 7,
     unit: 'days',
     getCurrentValue: () => {
-      // This tracks days active - would be in achievements store
-      return 1; // Placeholder
+      // Get days active from achievements store stats (via localStorage)
+      const STATS_KEY = 'metabol-sim-achievement-stats';
+      const today = new Date();
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+
+      try {
+        const saved = localStorage.getItem(STATS_KEY);
+        if (saved) {
+          const stats = JSON.parse(saved);
+          // Calculate days active in the current week (last 7 days)
+          // This is a simplified version - in production, track actual active dates
+          return Math.min(stats.daysActive || 1, 7);
+        }
+      } catch {
+        // If localStorage fails, return default
+      }
+      return 1;
     },
     advice: 'Consistency is key for metabolic health',
     educationalInfo: 'Metabolic adaptations occur over weeks and months. Consistent habits lead to lasting changes in hormone profiles and body composition.',
@@ -274,3 +305,82 @@ export const GOAL_CATEGORIES = [
   { id: 'hormones', name: 'Hormones', icon: '🧪' },
   { id: 'lifestyle', name: 'Lifestyle', icon: '🌟' },
 ];
+
+// ============================================================================
+// HYDRATION TRACKING HELPERS
+// ============================================================================
+
+const HYDRATION_KEY = 'metabol-sim-hydration';
+
+interface HydrationData {
+  date: string;
+  glasses: number;
+  lastUpdated: number;
+}
+
+function getHydrationData(): HydrationData {
+  const today = new Date().toDateString();
+
+  try {
+    const saved = localStorage.getItem(HYDRATION_KEY);
+    if (saved) {
+      const data: HydrationData = JSON.parse(saved);
+      // Reset if it's a new day
+      if (data.date === today) {
+        return data;
+      }
+    }
+  } catch {
+    // If localStorage fails, return default
+  }
+
+  return { date: today, glasses: 0, lastUpdated: Date.now() };
+}
+
+function saveHydrationData(data: HydrationData): void {
+  try {
+    localStorage.setItem(HYDRATION_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Failed to save hydration data:', error);
+  }
+}
+
+/**
+ * Get the current number of glasses of water consumed today
+ */
+export function getTodayHydration(): number {
+  return getHydrationData().glasses;
+}
+
+/**
+ * Add a glass of water to today's hydration count
+ */
+export function addHydration(): number {
+  const data = getHydrationData();
+  data.glasses += 1;
+  data.lastUpdated = Date.now();
+  saveHydrationData(data);
+  return data.glasses;
+}
+
+/**
+ * Remove a glass of water from today's hydration count
+ */
+export function removeHydration(): number {
+  const data = getHydrationData();
+  data.glasses = Math.max(0, data.glasses - 1);
+  data.lastUpdated = Date.now();
+  saveHydrationData(data);
+  return data.glasses;
+}
+
+/**
+ * Set a specific hydration count (for manual entry)
+ */
+export function setHydration(glasses: number): number {
+  const data = getHydrationData();
+  data.glasses = Math.max(0, glasses);
+  data.lastUpdated = Date.now();
+  saveHydrationData(data);
+  return data.glasses;
+}

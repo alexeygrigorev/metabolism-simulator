@@ -293,26 +293,47 @@ export function getAchievementProgress(achievementId: string): { current: number
   const achievement = ACHIEVEMENTS.find((a) => a.id === achievementId);
   if (!achievement) return { current: 0, target: 1, label: '' };
 
-  switch (achievementId) {
-    case 'meal-master':
-      return { current: stats.mealsLogged, target: 25, label: 'meals' };
-    case 'workout-warrior':
-      return { current: stats.exercisesLogged, target: 15, label: 'exercises' };
-    case 'sleep-master':
-      return { current: stats.sleepSessions, target: 10, label: 'sessions' };
+  // For tiered achievements, extract the parent ID
+  const parentId = achievement.parentAchievement || achievementId;
+
+  // Handle by parent achievement ID
+  switch (parentId) {
+    case 'meal-tracker':
+      return { current: stats.mealsLogged, target: achievement.tierLevel === 1 ? 10 : achievement.tierLevel === 2 ? 50 : achievement.tierLevel === 3 ? 150 : 500, label: 'meals' };
+    case 'exercise-tracker':
+      return { current: stats.exercisesLogged, target: achievement.tierLevel === 1 ? 5 : achievement.tierLevel === 2 ? 25 : achievement.tierLevel === 3 ? 100 : 300, label: 'workouts' };
+    case 'sleep-tracker':
+      return { current: stats.sleepSessions, target: achievement.tierLevel === 1 ? 5 : achievement.tierLevel === 2 ? 20 : achievement.tierLevel === 3 ? 75 : 200, label: 'sessions' };
+    case 'days-active':
+      return { current: stats.daysActive, target: achievement.tierLevel === 1 ? 7 : achievement.tierLevel === 2 ? 30 : achievement.tierLevel === 3 ? 100 : 365, label: 'days' };
     case 'muscle-gain':
-      return { current: Math.max(0, stats.muscleMassGained), target: 1, label: 'kg' };
-    case 'seven-days':
-      return { current: stats.daysActive, target: 7, label: 'days' };
-    case 'scenario-master':
-      return { current: stats.scenariosCompleted, target: 3, label: 'scenarios' };
+    case 'muscle-master':
+      return { current: Math.max(0, stats.muscleMassGained), target: achievement.id === 'muscle-master' ? 2 : 1, label: 'kg' };
+    case 'protein-seeker':
+    case 'protein-master':
+      return { current: stats.proteinStreak, target: achievement.id === 'protein-master' ? 25 : 5, label: 'times' };
     case 'insulin-spike':
       return { current: stats.peakInsulin, target: 30, label: 'µU/mL' };
     case 'cortisol-spike':
       return { current: stats.peakCortisol, target: 25, label: 'mcg/dL' };
     case 'testosterone-peak':
       return { current: stats.peakTestosterone, target: 30, label: 'nmol/L' };
+    case 'fasting-starter':
+      return { current: stats.fastingStreak, target: 3, label: 'hours' };
+    case 'first-scenario':
+    case 'scenario-master':
+      return { current: stats.scenariosCompleted, target: achievement.id === 'scenario-master' ? 3 : 1, label: 'scenarios' };
     default:
+      // For first-meal, first-workout, first-sleep, use the count as progress
+      if (achievementId === 'first-meal') {
+        return { current: stats.mealsLogged, target: 1, label: 'meal' };
+      }
+      if (achievementId === 'first-workout') {
+        return { current: stats.exercisesLogged, target: 1, label: 'workout' };
+      }
+      if (achievementId === 'first-sleep') {
+        return { current: stats.sleepSessions, target: 1, label: 'session' };
+      }
       return { current: 0, target: 1, label: '' };
   }
 }
