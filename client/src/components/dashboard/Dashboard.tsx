@@ -33,6 +33,7 @@ import WorkoutTemplates from './WorkoutTemplates';
 import MeasurementsTracker from './MeasurementsTracker';
 import RecoveryDashboard from './RecoveryDashboard';
 import UndoPanel from './UndoPanel';
+import DataExportPanel from './DataExportPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import HealthAlertsPanel from './HealthAlertsPanel';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
@@ -424,6 +425,13 @@ function Dashboard() {
       <LazyLoad rootMargin="2000px" threshold={0.01}>
         <HormoneInsights />
       </LazyLoad>
+
+      {/* Data Export Panel - lazy load */}
+      <SectionBoundary sectionName="Data Export">
+        <LazyLoad rootMargin="2000px" threshold={0.01}>
+          <DataExportPanel />
+        </LazyLoad>
+      </SectionBoundary>
     </div>
 
     {/* Education Hub Modal - lazy loaded */}

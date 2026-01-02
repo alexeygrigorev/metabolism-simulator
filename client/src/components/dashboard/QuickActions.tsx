@@ -6,7 +6,7 @@
 // Provides one-click access to frequently logged items.
 // ============================================================================
 
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { useFavoritesStore } from '../../state/favoritesStore';
 import { useSimulationStore } from '../../state/store';
 import type { FavoriteExercise, FavoriteMeal } from '../../state/favoritesStore';
@@ -16,10 +16,11 @@ interface QuickActionsProps {
 }
 
 const QuickActions = memo(function QuickActions({ className = '' }: QuickActionsProps) {
-  const { favoriteExercises, favoriteMeals, removeFavoriteExercise, removeFavoriteMeal, isExerciseFavorite, isMealFavorite } = useFavoritesStore();
+  const { favoriteExercises, favoriteMeals, removeFavoriteExercise, removeFavoriteMeal } = useFavoritesStore();
   const { logExercise, logMeal } = useSimulationStore();
 
-  const handleLogFavoriteExercise = (exercise: FavoriteExercise) => {
+  // Stable handler functions with useCallback
+  const handleLogFavoriteExercise = useCallback((exercise: FavoriteExercise) => {
     logExercise({
       id: `exercise-${Date.now()}`,
       exerciseId: exercise.exerciseId,
@@ -27,9 +28,9 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
       duration: exercise.defaultDuration,
       timestamp: new Date().toISOString(),
     });
-  };
+  }, [logExercise]);
 
-  const handleLogFavoriteMeal = (meal: FavoriteMeal) => {
+  const handleLogFavoriteMeal = useCallback((meal: FavoriteMeal) => {
     logMeal({
       id: `meal-${Date.now()}`,
       name: meal.name,
@@ -39,7 +40,15 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
       glycemicLoad: meal.glycemicLoad,
       insulinResponse: { peak: 0, magnitude: 0, duration: 0, areaUnderCurve: 0 },
     });
-  };
+  }, [logMeal]);
+
+  const handleRemoveFavoriteExercise = useCallback((exerciseId: string) => {
+    removeFavoriteExercise(exerciseId);
+  }, [removeFavoriteExercise]);
+
+  const handleRemoveFavoriteMeal = useCallback((mealName: string) => {
+    removeFavoriteMeal(mealName);
+  }, [removeFavoriteMeal]);
 
   const hasFavorites = favoriteExercises.length > 0 || favoriteMeals.length > 0;
 
@@ -92,7 +101,7 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
                         </div>
                       </button>
                       <button
-                        onClick={() => removeFavoriteExercise(exercise.exerciseId)}
+                        onClick={() => handleRemoveFavoriteExercise(exercise.exerciseId)}
                         className="absolute top-1 right-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Remove from favorites"
                       >
@@ -126,7 +135,7 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
                         </div>
                       </button>
                       <button
-                        onClick={() => removeFavoriteMeal(meal.name)}
+                        onClick={() => handleRemoveFavoriteMeal(meal.name)}
                         className="absolute top-1 right-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Remove from favorites"
                       >
