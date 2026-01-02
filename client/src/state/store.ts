@@ -15,6 +15,7 @@ import {
   HORMONE_BASELINES,
 } from '../utils/demoSimulation';
 import { useAchievementsStore } from './achievementsStore';
+import { useSettingsStore } from './settingsStore';
 
 // History for sparkline visualization (limited to 20 points for performance)
 export interface HormoneHistory {
@@ -144,6 +145,34 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
     } catch (error) {
       console.error('Initialization error:', error);
 
+      // Get persisted settings
+      const settings = useSettingsStore.getState();
+      const userProfile = settings.userProfile || {
+        id: userId,
+        age: 30,
+        biologicalSex: BiologicalSex.Male,
+        weight: 75,
+        height: 180,
+        bodyFatPercentage: 0.18,
+        activityLevel: 1.55,
+      };
+
+      // Calculate BMR and TDEE based on persisted profile
+      const calculateBMR = (user: UserProfile): number => {
+        const { weight, height, age, biologicalSex } = user;
+        if (biologicalSex === BiologicalSex.Male) {
+          return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+        } else {
+          return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+        }
+      };
+
+      const bmr = calculateBMR(userProfile);
+      const tdee = bmr * userProfile.activityLevel;
+      const bodyFat = userProfile.weight * userProfile.bodyFatPercentage;
+      const leanMass = userProfile.weight - bodyFat;
+      const skeletalMuscleMass = leanMass * 0.45;
+
       // Create a default simulation state for demo purposes
       // Note: We do NOT call connectWebSocket in demo mode
       const defaultState: SimulationState = {
@@ -151,18 +180,10 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
         userId,
         timestamp: new Date(),
         gameTime: new Date(),
-        user: {
-          id: userId,
-          age: 30,
-          biologicalSex: BiologicalSex.Male,
-          weight: 75,
-          height: 180,
-          bodyFatPercentage: 0.18,
-          activityLevel: 1.55,
-        },
+        user: userProfile,
         energy: {
-          bmr: 1750,
-          tdee: 2700,
+          bmr,
+          tdee,
           caloriesConsumed: 0,
           caloriesBurned: 0,
           netCalories: 0,
@@ -175,12 +196,12 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
             lastMealGlycemicLoad: 0,
             units: 'mg/dL',
           },
-          carbohydrates: { consumed: 0, burned: 0, target: 300 },
-          proteins: { consumed: 0, burned: 0, target: 120 },
-          fats: { consumed: 0, burned: 0, target: 75 },
+          carbohydrates: { consumed: 0, burned: 0, target: settings.macroTargets.carbohydrates },
+          proteins: { consumed: 0, burned: 0, target: settings.macroTargets.proteins },
+          fats: { consumed: 0, burned: 0, target: settings.macroTargets.fats },
           glycogen: { muscle: 1, liver: 1, capacity: { muscle: 400, liver: 100 } },
-          bodyFat: 13.5,
-          leanMass: 61.5,
+          bodyFat,
+          leanMass,
           substrateUtilization: {
             fatOxidation: 0.1,
             glucoseOxidation: 0.08,
@@ -200,8 +221,8 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
           ghrelin: { currentValue: 150, baseline: 150, peak: 150, trough: 150, trend: 0, sensitivity: 1 },
         },
         muscle: {
-          totalMass: 61.5,
-          skeletalMuscleMass: 58.5,
+          totalMass: skeletalMuscleMass * 1.05,
+          skeletalMuscleMass,
           fiberTypeDistribution: { type1: 0.5, type2a: 0.3, type2x: 0.2 },
           proteinBalance: { synthesisRate: 0.01, breakdownRate: 0.01, netBalance: 0, anabolicWindowRemaining: 0 },
           satelliteCells: { active: 0, proliferating: 0, differentiating: 0, fusing: 0, nucleiPerFiber: 1 },
@@ -212,13 +233,15 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
         recentMeals: [],
         recentExercises: [],
         recentSleep: [],
-        settings: { timeScale: 1, paused: false, autoSave: true },
+        settings: { timeScale: settings.timeScale, paused: settings.paused, autoSave: true },
       };
 
       set({
         state: defaultState,
         connected: false, // Not connected to real server
         loading: false,
+        timeScale: settings.timeScale,
+        paused: settings.paused,
       });
     }
   },
@@ -280,12 +303,18 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
     };
 
     set({ state: updatedState });
+
+    // Persist to settings store
+    useSettingsStore.getState().setUserProfile(updatedUser);
+
     addToast('Profile updated successfully', 'success');
   },
 
   setTimeScale: async (scale: number) => {
     // Always update local state
     set({ timeScale: scale });
+    // Persist to settings store
+    useSettingsStore.getState().setTimeScale(scale);
 
     // Try to sync with server if we have a state
     const { state } = get();
@@ -305,6 +334,8 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
   setPaused: async (paused: boolean) => {
     // Always update local state
     set({ paused });
+    // Persist to settings store
+    useSettingsStore.getState().setPaused(paused);
 
     // Try to sync with server if we have a state
     const { state } = get();
@@ -326,6 +357,8 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
     const newPaused = !paused;
     // Update local state immediately
     set({ paused: newPaused });
+    // Persist to settings store
+    useSettingsStore.getState().setPaused(newPaused);
 
     // Try to sync with server if we have a state
     const { state } = get();
