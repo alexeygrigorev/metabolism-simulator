@@ -22,7 +22,7 @@ describe('Skeleton Component', () => {
 
   it('should render multiple skeletons when count is specified', () => {
     render(<Skeleton count={3} />);
-    const skeletons = document.querySelectorAll('[class*="animate-pulse"]');
+    const skeletons = document.querySelectorAll('[class*="animate-shimmer"]');
     expect(skeletons.length).toBe(3);
   });
 

@@ -10,6 +10,7 @@ interface SkeletonProps {
   width?: string | number;
   height?: string | number;
   count?: number;
+  delay?: number; // Stagger animation delay in ms
 }
 
 // Animation keyframes defined as CSS class
@@ -22,6 +23,16 @@ const shimmerAnimation = `
       background-position: 200% 0;
     }
   }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 
 const Skeleton = memo(function Skeleton({
@@ -30,8 +41,9 @@ const Skeleton = memo(function Skeleton({
   width,
   height,
   count = 1,
+  delay = 0,
 }: SkeletonProps) {
-  const baseClasses = 'animate-pulse bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%]';
+  const baseClasses = 'animate-shimmer bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%]';
 
   const variantClasses: Record<typeof variant, string> = {
     text: 'h-4 rounded',
@@ -43,12 +55,16 @@ const Skeleton = memo(function Skeleton({
   const style: React.CSSProperties = {};
   if (width) style.width = typeof width === 'number' ? `${width}px` : width;
   if (height) style.height = typeof height === 'number' ? `${height}px` : height;
+  if (delay) style.animationDelay = `${delay}ms`;
 
   const skeletons = Array.from({ length: count }, (_, i) => (
     <div
       key={i}
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-      style={Object.keys(style).length > 0 ? style : undefined}
+      style={{
+        ...Object.keys(style).length > 0 ? style : undefined,
+        animationDelay: `${delay + i * 50}ms`,
+      }}
       aria-hidden="true"
     />
   ));
@@ -56,6 +72,11 @@ const Skeleton = memo(function Skeleton({
   return (
     <>
       <style>{shimmerAnimation}</style>
+      <style>{`
+        .animate-shimmer {
+          animation: shimmer 2s infinite linear, fadeIn 0.3s ease-out forwards;
+        }
+      `}</style>
       {skeletons.length === 1 ? skeletons[0] : <div className="space-y-2">{skeletons}</div>}
     </>
   );
@@ -109,13 +130,14 @@ export const HormonePanelSkeleton = memo(function HormonePanelSkeleton() {
 export const ChartSkeleton = memo(function ChartSkeleton({ height = 200 }: { height?: number }) {
   return (
     <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-4">
-      <Skeleton width={150} height={20} className="mb-4" />
+      <Skeleton width={150} height={20} className="mb-4" delay={0} />
       <div className="flex items-end justify-between gap-2 h-40" aria-hidden="true">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
           <Skeleton
             key={i}
             variant="rounded"
             className="flex-1"
+            delay={i * 30}
             style={{ height: `${30 + Math.random() * 70}%` }}
           />
         ))}

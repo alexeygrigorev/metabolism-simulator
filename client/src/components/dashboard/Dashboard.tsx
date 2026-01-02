@@ -31,6 +31,7 @@ import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
 import { useHealthAlerts } from '../../hooks/useHealthAlerts';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { Skeleton, ProfileCardSkeleton, HormonePanelSkeleton, ChartSkeleton, CardSkeleton } from '../ui/Skeleton';
+import LazyLoad from '../ui/LazyLoad';
 
 // Code splitting for heavy modal components - loaded only when needed
 const ExerciseBuilder = lazy(() => import('./ExerciseBuilder'));
@@ -340,25 +341,37 @@ function Dashboard() {
       {/* Hormone charts */}
       <HormoneGrid />
 
-      {/* Time Series and Correlation Matrix charts with error boundaries */}
-      <ChartsSection />
+      {/* Time Series and Correlation Matrix charts with error boundaries - lazy load */}
+      <LazyLoad rootMargin="100px">
+        <ChartsSection />
+      </LazyLoad>
 
-      {/* Bottom row - Activity Log + Substrate Utilization */}
-      <ActivitySection />
+      {/* Bottom row - Activity Log + Substrate Utilization - lazy load */}
+      <LazyLoad rootMargin="100px">
+        <ActivitySection />
+      </LazyLoad>
 
-      {/* Exercise section with workout history and log button */}
-      <ExerciseSection onOpenExerciseBuilder={() => setShowExerciseBuilder(true)} />
+      {/* Exercise section with workout history and log button - lazy load */}
+      <LazyLoad rootMargin="100px">
+        <ExerciseSection onOpenExerciseBuilder={() => setShowExerciseBuilder(true)} />
+      </LazyLoad>
 
-      {/* Daily Goals */}
-      <DailyGoals />
+      {/* Daily Goals - lazy load */}
+      <LazyLoad rootMargin="100px">
+        <DailyGoals />
+      </LazyLoad>
 
-      {/* Statistics */}
+      {/* Statistics - lazy load */}
       <SectionBoundary sectionName="Statistics & Trends">
-        <StatisticsPanel />
+        <LazyLoad rootMargin="100px">
+          <StatisticsPanel />
+        </LazyLoad>
       </SectionBoundary>
 
-      {/* Hormone Insights */}
-      <HormoneInsights />
+      {/* Hormone Insights - lazy load */}
+      <LazyLoad rootMargin="100px">
+        <HormoneInsights />
+      </LazyLoad>
     </div>
 
     {/* Education Hub Modal - lazy loaded */}
