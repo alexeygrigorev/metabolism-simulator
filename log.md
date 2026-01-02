@@ -81,10 +81,16 @@ let's not have demo mode and always have backend running
 ```
 {
   "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "playwright@latest"
+      ]
+    },
     "playwriter": {
       "command": "npx",
       "args": [
-        "playwriter@latest"
+        "playwriter"
       ]
     }
   }
