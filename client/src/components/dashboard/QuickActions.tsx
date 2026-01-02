@@ -94,6 +94,7 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
                       <button
                         onClick={() => handleLogFavoriteExercise(exercise)}
                         className="w-full text-left"
+                        aria-label={`Log ${exercise.exerciseName} for ${exercise.defaultDuration} minutes`}
                       >
                         <div className="font-medium text-white text-sm">{exercise.exerciseName}</div>
                         <div className="text-xs text-slate-500">
@@ -104,6 +105,8 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
                         onClick={() => handleRemoveFavoriteExercise(exercise.exerciseId)}
                         className="absolute top-1 right-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Remove from favorites"
+                        aria-label={`Remove ${exercise.exerciseName} from favorites`}
+                        tabIndex={-1}
                       >
                         ✕
                       </button>
@@ -128,6 +131,7 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
                       <button
                         onClick={() => handleLogFavoriteMeal(meal)}
                         className="w-full text-left"
+                        aria-label={`Log ${meal.name} with ${Math.round(meal.macros.proteins)}g protein, ${Math.round(meal.macros.carbohydrates)}g carbs`}
                       >
                         <div className="font-medium text-white text-sm truncate">{meal.name}</div>
                         <div className="text-xs text-slate-500">
@@ -138,6 +142,8 @@ const QuickActions = memo(function QuickActions({ className = '' }: QuickActions
                         onClick={() => handleRemoveFavoriteMeal(meal.name)}
                         className="absolute top-1 right-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Remove from favorites"
+                        aria-label={`Remove ${meal.name} from favorites`}
+                        tabIndex={-1}
                       >
                         ✕
                       </button>

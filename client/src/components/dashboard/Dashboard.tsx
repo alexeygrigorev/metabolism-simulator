@@ -26,6 +26,7 @@ import WaterTracker from './WaterTracker';
 import SupplementTracker from './SupplementTracker';
 import StreaksPanel from './StreaksPanel';
 import QuickActions from './QuickActions';
+import QuickStats from './QuickStats';
 import ExerciseHistoryPanel from './ExerciseHistoryPanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import MealTemplates from './MealTemplates';
@@ -330,6 +331,11 @@ function Dashboard() {
 
       {/* Water Intake Tracker */}
       <WaterTracker />
+
+      {/* Quick Stats - Key metrics at a glance */}
+      <SectionBoundary sectionName="Quick Stats">
+        <QuickStats />
+      </SectionBoundary>
 
       {/* Quick Actions - Favorite exercises and meals */}
       <SectionBoundary sectionName="Quick Actions">
