@@ -311,6 +311,9 @@ test.describe('Activity Log', () => {
     await page.goto('/');
     // Wait for dashboard to fully load
     await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll down to trigger LazyLoad for Activity Log
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.75));
+    await page.waitForTimeout(500);
   });
 
   test('should display activity log panel', async ({ page }) => {
@@ -320,6 +323,10 @@ test.describe('Activity Log', () => {
   });
 
   test('should show activities in log after logging meal', async ({ page }) => {
+    // Scroll back up to find action buttons
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
     const logMealButton = page.getByRole('button', { name: /log meal/i });
     await logMealButton.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -328,11 +335,19 @@ test.describe('Activity Log', () => {
     await page.click('text=🍳 Breakfast');
     await page.waitForTimeout(1000);
 
+    // Scroll back down to check activity log
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.75));
+    await page.waitForTimeout(500);
+
     // Check activity log panel exists
     await expect(page.getByTestId('activity-log-panel')).toBeVisible({ timeout: 5000 });
   });
 
   test('should show activities in log after logging exercise', async ({ page }) => {
+    // Scroll back up to find action buttons
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
     const logExerciseButton = page.getByRole('button', { name: /log exercise/i });
     await logExerciseButton.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -341,17 +356,29 @@ test.describe('Activity Log', () => {
     await page.click('text=🏃 Running');
     await page.waitForTimeout(1000);
 
+    // Scroll back down to check activity log
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.75));
+    await page.waitForTimeout(500);
+
     // Check activity log panel exists
     await expect(page.getByTestId('activity-log-panel')).toBeVisible({ timeout: 5000 });
   });
 
   test('should show activities in log after logging sleep', async ({ page }) => {
+    // Scroll back up to find action buttons
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
     // Find the sleep button by text content
     const sleepButton = page.locator('button:has-text("Sleep (8h)")');
     await sleepButton.waitFor({ state: 'visible', timeout: 10000 });
 
     await sleepButton.click();
     await page.waitForTimeout(1000);
+
+    // Scroll back down to check activity log
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.75));
+    await page.waitForTimeout(500);
 
     // Check activity log panel exists
     await expect(page.getByTestId('activity-log-panel')).toBeVisible({ timeout: 5000 });
@@ -848,17 +875,22 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should display correlation matrix section', async ({ page }) => {
-    // Scroll to find the correlation matrix
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    // Scroll to find the correlation matrix - try scrolling to the end first
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    // Then scroll back up slightly to ensure the element is in view
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await page.waitForTimeout(1000);
 
     // Check for correlation matrix heading
-    await expect(page.locator('text=Hormone Correlation Matrix')).toBeVisible();
+    await expect(page.locator('text=Hormone Correlation Matrix')).toBeVisible({ timeout: 15000 });
   });
 
   test('should display correlation matrix legend', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await page.waitForTimeout(1000);
 
     // Check for legend items
     const pageContent = await page.textContent('body');
@@ -866,8 +898,10 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should display hormone abbreviation headers in matrix', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await page.waitForTimeout(1000);
 
     // Check for hormone abbreviations in the matrix
     const pageContent = await page.textContent('body');
@@ -875,8 +909,10 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should display current hormone values', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await page.waitForTimeout(1000);
 
     // Check for hormone values displayed
     const pageContent = await page.textContent('body');
@@ -885,8 +921,10 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should allow selecting a hormone to see relationships', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await page.waitForTimeout(1000);
 
     // Click on a hormone button (INS - Insulin)
     const insulinButton = page.locator('text=/INS.*\\d+\\.\\d+/').first();
@@ -942,8 +980,10 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should show relationship icons in matrix cells', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await page.waitForTimeout(1000);
 
     // Check for relationship icons (synergistic ⊕, antagonistic ⊖, permissive ⊙)
     const pageContent = await page.textContent('body');
@@ -951,8 +991,10 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should highlight row and column when hormone is selected', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await page.waitForTimeout(1000);
 
     // Click on a hormone button
     await page.evaluate(() => {
@@ -1092,17 +1134,17 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should display workouts section', async ({ page }) => {
-    // Scroll to find the Workouts section
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    // Scroll to find the Workouts section - scroll further down
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Check for Workouts heading
     await expect(page.locator('text=Workouts')).toBeVisible();
   });
 
   test('should show log workout button', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Check for Log Workout button
     const logButton = page.locator('button:has-text("Log Workout")');
@@ -1110,8 +1152,8 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should open exercise builder modal', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Click Log Workout button
     await page.evaluate(() => {
@@ -1127,18 +1169,11 @@ test.describe('Exercise Builder', () => {
 
   test('should display exercise search input', async ({ page }) => {
     // Scroll to the bottom to ensure we reach the Workouts section
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
     await page.waitForTimeout(1000);
 
-    // Try to find the Log Workout button with multiple attempts
+    // Try to find the Log Workout button
     let logButton = page.locator('button:has-text("Log Workout")').first();
-
-    // If button isn't visible, scroll back up slightly
-    const isVisible = await logButton.isVisible().catch(() => false);
-    if (!isVisible) {
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-      await page.waitForTimeout(500);
-    }
 
     // Verify button exists
     await expect(logButton).toBeVisible();
@@ -1146,8 +1181,8 @@ test.describe('Exercise Builder', () => {
 
   test('should display exercise category filters', async ({ page }) => {
     // Scroll further down to reach the Workouts section
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.7));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Verify Log Workout button exists
     const logButton = page.locator('button:has-text("Log Workout")').first();
@@ -1164,8 +1199,8 @@ test.describe('Exercise Builder', () => {
 
   test('should filter exercises when typing in search', async ({ page }) => {
     // Scroll further down to reach the Workouts section
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.7));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Verify Log Workout button exists
     const logButton = page.locator('button:has-text("Log Workout")').first();
@@ -1177,8 +1212,8 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should allow selecting an exercise', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Open exercise builder
     await page.evaluate(() => {
@@ -1202,8 +1237,8 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should close modal with close button', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Open exercise builder
     await page.evaluate(() => {
@@ -1225,8 +1260,8 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should close modal when clicking outside', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Open exercise builder
     await page.evaluate(() => {
@@ -1246,16 +1281,16 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should display exercise history panel', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Check for Workouts section heading (the parent section)
     await expect(page.locator('text=Workouts')).toBeVisible();
   });
 
   test('should show empty state when no workouts logged', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
+    await page.waitForTimeout(1000);
 
     // Check that Workouts section exists
     await expect(page.locator('text=Workouts')).toBeVisible();
