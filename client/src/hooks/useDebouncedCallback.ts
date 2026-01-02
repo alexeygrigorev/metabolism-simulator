@@ -53,16 +53,26 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
   fn: T,
   delay: number = 100
 ): T {
-  const lastRunRef = useRef<number>(Date.now());
+  const lastRunRef = useRef<number>(0); // Initialize to 0 to always call first time
   const timeoutRef = useRef<NodeJS.Timeout>();
   const fnRef = useRef(fn);
+  const argsRef = useRef<Parameters<T>>();
 
   useEffect(() => {
     fnRef.current = fn;
   }, [fn]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   return useCallback(
     ((...args: Parameters<T>) => {
+      argsRef.current = args;
       const now = Date.now();
       const timeSinceLastRun = now - lastRunRef.current;
 
@@ -78,7 +88,9 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
         const remainingTime = delay - timeSinceLastRun;
         timeoutRef.current = setTimeout(() => {
           lastRunRef.current = Date.now();
-          fnRef.current(...args);
+          if (argsRef.current) {
+            fnRef.current(...argsRef.current);
+          }
         }, remainingTime);
       }
     }) as T,
@@ -118,6 +130,7 @@ export function useRafCallback<T extends (...args: any[]) => any>(
   const rafRef = useRef<number>();
   const fnRef = useRef(fn);
   const argsRef = useRef<Parameters<T>>();
+  const isRafSupported = typeof requestAnimationFrame !== 'undefined';
 
   useEffect(() => {
     fnRef.current = fn;
@@ -125,27 +138,36 @@ export function useRafCallback<T extends (...args: any[]) => any>(
 
   useEffect(() => {
     return () => {
-      if (rafRef.current) {
+      if (rafRef.current && isRafSupported) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, []);
+  }, [isRafSupported]);
 
   return useCallback(
     ((...args: Parameters<T>) => {
       argsRef.current = args;
 
-      if (rafRef.current) {
+      if (rafRef.current && isRafSupported) {
         cancelAnimationFrame(rafRef.current);
       }
 
-      rafRef.current = requestAnimationFrame(() => {
-        if (argsRef.current !== undefined) {
-          fnRef.current(...argsRef.current);
-        }
-      });
+      if (isRafSupported) {
+        rafRef.current = requestAnimationFrame(() => {
+          if (argsRef.current !== undefined) {
+            fnRef.current(...argsRef.current);
+          }
+        });
+      } else {
+        // Fallback for environments without RAF (e.g., some test environments)
+        setTimeout(() => {
+          if (argsRef.current !== undefined) {
+            fnRef.current(...argsRef.current);
+          }
+        }, 0);
+      }
     }) as T,
-    []
+    [isRafSupported]
   );
 }
 
