@@ -32,6 +32,7 @@ import MealTemplates from './MealTemplates';
 import WorkoutTemplates from './WorkoutTemplates';
 import MeasurementsTracker from './MeasurementsTracker';
 import RecoveryDashboard from './RecoveryDashboard';
+import UndoPanel from './UndoPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import HealthAlertsPanel from './HealthAlertsPanel';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
@@ -332,6 +333,13 @@ function Dashboard() {
       {/* Quick Actions - Favorite exercises and meals */}
       <SectionBoundary sectionName="Quick Actions">
         <QuickActions />
+      </SectionBoundary>
+
+      {/* Undo Panel - Recent actions with undo capability */}
+      <SectionBoundary sectionName="Undo Panel">
+        <LazyLoad rootMargin="1000px" threshold={0.01}>
+          <UndoPanel />
+        </LazyLoad>
       </SectionBoundary>
 
       {/* Supplement Tracker */}

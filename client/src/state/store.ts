@@ -16,6 +16,7 @@ import {
 } from '../utils/demoSimulation';
 import { useAchievementsStore } from './achievementsStore';
 import { useSettingsStore } from './settingsStore';
+import { useUndoStore } from './undoStore';
 
 // History for sparkline visualization (limited to 20 points for performance)
 export interface HormoneHistory {
@@ -427,6 +428,22 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
       // Track achievement
       useAchievementsStore.getState().trackMeal();
 
+      // Track in undo store
+      useUndoStore.getState().addAction({
+        type: 'meal',
+        data: {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: meal.name || 'Custom meal',
+          timestamp: Date.now(),
+          calories: (meal.totalMacros?.carbohydrates || 0) * 4 +
+                   (meal.totalMacros?.proteins || 0) * 4 +
+                   (meal.totalMacros?.fats || 0) * 9,
+          carbs: meal.totalMacros?.carbohydrates || 0,
+          proteins: meal.totalMacros?.proteins || 0,
+          fats: meal.totalMacros?.fats || 0,
+        },
+      });
+
       // Track hormone peaks for achievements
       if (updatedState.hormones.insulin.currentValue > 20) {
         useAchievementsStore.getState().trackHormonePeak('insulin', updatedState.hormones.insulin.currentValue);
@@ -498,6 +515,19 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
       // Track achievement
       useAchievementsStore.getState().trackExercise();
 
+      // Track in undo store
+      useUndoStore.getState().addAction({
+        type: 'exercise',
+        data: {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: exercise.name || 'Custom exercise',
+          timestamp: Date.now(),
+          duration: duration,
+          caloriesBurned: caloriesBurned,
+          met: exercise.met || 5,
+        },
+      });
+
       // Track hormone peaks for achievements
       if (updatedState.hormones.testosterone.currentValue > 20) {
         useAchievementsStore.getState().trackHormonePeak('testosterone', updatedState.hormones.testosterone.currentValue);
@@ -536,6 +566,18 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
         if (intensity <= 0.4) success('Low');
         else if (intensity <= 0.7) success('Medium');
         else success('High');
+
+        const stressLevel = intensity <= 0.4 ? 'low' : intensity <= 0.7 ? 'med' : 'high';
+
+        // Track in undo store
+        useUndoStore.getState().addAction({
+          type: 'stress',
+          data: {
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: Date.now(),
+            level: stressLevel,
+          },
+        });
 
         // Track cortisol peak for achievements if stress is high
         if (intensity > 0.7) {
@@ -602,6 +644,17 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
 
       // Track achievement
       useAchievementsStore.getState().trackSleep();
+
+      // Track in undo store
+      useUndoStore.getState().addAction({
+        type: 'sleep',
+        data: {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: Date.now(),
+          hours: hours,
+          quality: quality,
+        },
+      });
 
       // Track testosterone boost from sleep for achievements
       if (quality > 0.7 && hours >= 7) {
