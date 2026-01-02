@@ -76,8 +76,17 @@ let's not have demo mode and always have backend running
 
 
 
+.mcp.json:
 
-
-claude mcp add --transport stdio playwriter cmd C:/ npx playwriter
-
-claude mcp remove playwriter
+```
+{
+  "mcpServers": {
+    "playwriter": {
+      "command": "npx",
+      "args": [
+        "playwriter@latest"
+      ]
+    }
+  }
+}
+```

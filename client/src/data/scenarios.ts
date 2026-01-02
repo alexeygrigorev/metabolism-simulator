@@ -284,4 +284,118 @@ export const SCENARIOS: Scenario[] = [
       ],
     },
   },
+  {
+    id: 'carb-cycling',
+    name: "Carbohydrate Cycling",
+    description: "Learn how strategic carbohydrate manipulation can optimize body composition. Understand the relationship between carbs, insulin, and fat oxidation.",
+    category: 'advanced',
+    difficulty: 4,
+    estimatedTime: '15 min',
+    phases: [
+      {
+        id: 'phase-1',
+        name: 'Low Carb Day',
+        description: 'Minimize carbs to maximize fat oxidation and insulin sensitivity.',
+        objectives: [
+          { id: 'obj-1', description: 'Keep carbs under 50g', target: 50, current: 0, unit: 'g', completed: false },
+          { id: 'obj-2', description: 'Observe low insulin', target: 5, current: 0, unit: 'µU/mL', completed: false },
+        ],
+      },
+      {
+        id: 'phase-2',
+        name: 'High Carb Day',
+        description: 'Strategically increase carbs to replenish glycogen and boost leptin.',
+        objectives: [
+          { id: 'obj-3', description: 'Consume 200g+ carbs', target: 200, current: 0, unit: 'g', completed: false },
+          { id: 'obj-4', description: 'Observe insulin spike', target: 30, current: 0, unit: 'µU/mL', completed: false },
+        ],
+      },
+    ],
+    educationalContent: {
+      title: 'Strategic Carbohydrate Manipulation',
+      body: 'Carb cycling involves alternating high and low carb days to optimize metabolism. Low carb days improve insulin sensitivity and fat oxidation. High carb days replenish glycogen and support thyroid function and leptin production.',
+      keyPoints: [
+        'Low carb days increase insulin sensitivity',
+        'High carb days boost metabolism and leptin',
+        'Timing high carbs around exercise maximizes glycogen storage',
+        'Consistent carb intake may be superior for most people',
+      ],
+    },
+  },
+  {
+    id: 'metabolic-aging',
+    name: "Metabolic Aging",
+    description: "Understand how metabolism changes with age and what you can do to maintain metabolic health. Learn about sarcopenia, anabolic resistance, and hormonal decline.",
+    category: 'advanced',
+    difficulty: 3,
+    estimatedTime: '12 min',
+    phases: [
+      {
+        id: 'phase-1',
+        name: 'Anabolic Resistance',
+        description: 'Older muscles require more protein to stimulate the same amount of MPS.',
+        objectives: [
+          { id: 'obj-1', description: 'Consume 40g protein', target: 40, current: 0, unit: 'g', completed: false },
+          { id: 'obj-2', description: 'Add resistance training', target: 1, current: 0, unit: 'session', completed: false },
+        ],
+      },
+      {
+        id: 'phase-2',
+        name: 'Hormonal Support',
+        description: 'Use lifestyle interventions to support healthy hormone levels.',
+        objectives: [
+          { id: 'obj-3', description: 'Get quality sleep', target: 8, current: 0, unit: 'hours', completed: false },
+          { id: 'obj-4', description: 'Maintain low stress', target: 15, current: 0, unit: 'cortisol level', completed: false },
+        ],
+      },
+    ],
+    educationalContent: {
+      title: 'Preserving Metabolic Health With Age',
+      body: 'Metabolic rate declines ~2-3% per decade after age 30, largely due to muscle loss (sarcopenia). Anabolic resistance means older adults need more protein and resistance training to maintain muscle. Hormonal decline can be mitigated through lifestyle.',
+      keyPoints: [
+        'Muscle mass is the primary driver of metabolic rate',
+        'Older adults need 1.6g/kg protein vs 1.2g/kg for younger adults',
+        'Resistance training is essential at all ages',
+        'Sleep quality declines with age but can be improved',
+      ],
+    },
+  },
+  {
+    id: 'intermittent-fasting',
+    name: "Time-Restricted Eating",
+    description: "Explore the benefits and drawbacks of intermittent fasting. Learn about autophagy, circadian rhythms, and meal timing effects.",
+    category: 'intermediate',
+    difficulty: 2,
+    estimatedTime: '10 min',
+    phases: [
+      {
+        id: 'phase-1',
+        name: 'Eating Window',
+        description: 'Confine eating to an 8-hour window for 16:8 fasting.',
+        objectives: [
+          { id: 'obj-1', description: 'Fast for 16 hours', target: 16, current: 0, unit: 'hours', completed: false },
+          { id: 'obj-2', description: 'Observe low insulin', target: 5, current: 0, unit: 'µU/mL', completed: false },
+        ],
+      },
+      {
+        id: 'phase-2',
+        name: 'Breaking the Fast',
+        description: 'Strategically break your fast with protein and healthy fats.',
+        objectives: [
+          { id: 'obj-3', description: 'Break fast with protein-rich meal', target: 30, current: 0, unit: 'g protein', completed: false },
+          { id: 'obj-4', description: 'Observe balanced hormone response', target: 1, current: 0, unit: 'all markers stable', completed: false },
+        ],
+      },
+    ],
+    educationalContent: {
+      title: 'Fasting as a Metabolic Tool',
+      body: 'Time-restricted eating aligns food intake with circadian rhythms. Fasting lowers insulin, increases glucagon, and may promote autophagy (cellular cleanup). However, meal timing is less important than total calories for most people.',
+      keyPoints: [
+        '16:8 is the most popular fasting protocol',
+        'Early time-restricted eating (eating earlier) may be more beneficial',
+        'Fasting can increase autophagy after 18-24 hours',
+        'Women may need longer eating windows (10-12 hours)',
+      ],
+    },
+  },
 ];
