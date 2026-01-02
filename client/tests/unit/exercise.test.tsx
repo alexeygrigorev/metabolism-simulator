@@ -192,8 +192,8 @@ describe('ExerciseBuilder Component', () => {
     render(<ExerciseBuilder isOpen={true} onClose={() => {}} />);
     const searchInput = screen.getByPlaceholderText(/search exercises/i);
     fireEvent.change(searchInput, { target: { value: 'squat' } });
-    // Should show exercises matching 'squat'
-    expect(screen.getByText(/squat/i)).toBeInTheDocument();
+    // Should show exercises matching 'squat' (now there are multiple: Squat, Front Squat, Bulgarian Split Squat)
+    expect(screen.getAllByText(/squat/i).length).toBeGreaterThan(0);
   });
 
   it('should display category tabs', () => {
