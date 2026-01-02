@@ -75,6 +75,26 @@ function Header() {
     setShowSettings(false);
   }, []);
 
+  // Listen for keyboard shortcut events
+  useEffect(() => {
+    const handleOpenSettingsEvent = () => setShowSettings(true);
+    const handleExportDataEvent = () => {
+      // Trigger export by clicking the export button
+      const exportButton = document.querySelector('[data-testid="export-button"]');
+      if (exportButton instanceof HTMLButtonElement) {
+        exportButton.click();
+      }
+    };
+
+    window.addEventListener('open-settings', handleOpenSettingsEvent);
+    window.addEventListener('export-data', handleExportDataEvent);
+
+    return () => {
+      window.removeEventListener('open-settings', handleOpenSettingsEvent);
+      window.removeEventListener('export-data', handleExportDataEvent);
+    };
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-800/80 backdrop-blur-sm">
       <div className="flex items-center justify-between py-3">

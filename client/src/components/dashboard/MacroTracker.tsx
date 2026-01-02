@@ -30,7 +30,7 @@ const MacroTracker = memo(function MacroTracker() {
   );
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+    <div id="macro-tracker" className="bg-slate-800 rounded-lg p-4 border border-slate-700">
       <h3 className="text-lg font-semibold mb-4">Macronutrients</h3>
       <div className="space-y-3">
         {macros.map((macro) => {

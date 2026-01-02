@@ -152,7 +152,7 @@ const HormoneInsights = memo(function HormoneInsights() {
   const dominantHormones = getDominantHormones();
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+    <div id="hormone-insights" className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
       <h2 className="text-lg font-semibold text-white mb-4">Hormone Correlations</h2>
 
       {/* Dominant Hormones */}

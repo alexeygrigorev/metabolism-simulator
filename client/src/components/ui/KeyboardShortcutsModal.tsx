@@ -10,21 +10,66 @@ interface KeyboardShortcutsModalProps {
   onClose: () => void;
 }
 
-const SHORTCUTS = [
-  { key: 'Space', description: 'Toggle pause/resume simulation' },
-  { key: '1', description: 'Set time scale to 1x (real-time)' },
-  { key: '2', description: 'Set time scale to 10x' },
-  { key: '3', description: 'Set time scale to 1 minute/sec' },
-  { key: '4', description: 'Set time scale to 10 minutes/sec' },
-  { key: 'M', description: 'Open meal logging menu' },
-  { key: 'E', description: 'Open exercise logging menu' },
-  { key: 'S', description: 'Log 8 hours of sleep' },
-  { key: 'Esc', description: 'Close any open menu' },
-  { key: '?', description: 'Show this help' },
-];
+// Helper to format keyboard shortcut display
+function formatShortcutKey(shortcut: Omit<ReturnType<typeof DEFAULT_SHORTCUTS>[number], 'action'>): string {
+  const parts: string[] = [];
+  if (shortcut.ctrl) parts.push('Ctrl');
+  if (shortcut.shift) parts.push('Shift');
+  if (shortcut.alt) parts.push('Alt');
+  if (shortcut.meta) parts.push('Cmd');
+  parts.push(shortcut.key);
+  return parts.join('+');
+}
+
+// Group shortcuts by category
+function getShortcutsByCategory() {
+  const simulation = DEFAULT_SHORTCUTS.filter(s =>
+    [' ', '1', '2', '3', '4'].includes(s.key)
+  );
+  const logging = DEFAULT_SHORTCUTS.filter(s =>
+    ['m', 'e', 's', 'w'].includes(s.key)
+  );
+  const navigation = DEFAULT_SHORTCUTS.filter(s =>
+    ['d', 'h'].includes(s.key)
+  );
+  const system = DEFAULT_SHORTCUTS.filter(s =>
+    ['?', 'Escape'].includes(s.key) || s.ctrl
+  );
+
+  return { simulation, logging, navigation, system };
+}
 
 const KeyboardShortcutsModal = memo(function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsModalProps) {
   if (!isOpen) return null;
+
+  const categories = getShortcutsByCategory();
+
+  const ShortcutSection = memo(function ShortcutSection({
+    title,
+    shortcuts,
+  }: {
+    title: string;
+    shortcuts: typeof DEFAULT_SHORTCUTS;
+  }) {
+    return (
+      <div>
+        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">{title}</h3>
+        <div className="space-y-1.5">
+          {shortcuts.map((s, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-slate-900/50"
+            >
+              <kbd className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm font-mono text-cyan-400 min-w-[3rem] text-center">
+                {formatShortcutKey(s)}
+              </kbd>
+              <span className="text-sm text-slate-300">{s.description}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  });
 
   return (
     <div
@@ -32,7 +77,7 @@ const KeyboardShortcutsModal = memo(function KeyboardShortcutsModal({ isOpen, on
       onClick={onClose}
     >
       <div
-        className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl max-w-md w-full mx-4"
+        className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-4 border-b border-slate-700">
@@ -46,18 +91,11 @@ const KeyboardShortcutsModal = memo(function KeyboardShortcutsModal({ isOpen, on
           </button>
         </div>
 
-        <div className="p-4 space-y-2">
-          {SHORTCUTS.map((shortcut) => (
-            <div
-              key={shortcut.key}
-              className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-900/50"
-            >
-              <kbd className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm font-mono text-cyan-400 min-w-[2rem] text-center">
-                {shortcut.key}
-              </kbd>
-              <span className="text-sm text-slate-300">{shortcut.description}</span>
-            </div>
-          ))}
+        <div className="p-4 space-y-4 overflow-y-auto flex-1">
+          <ShortcutSection title="Simulation Controls" shortcuts={categories.simulation} />
+          <ShortcutSection title="Logging Actions" shortcuts={categories.logging} />
+          <ShortcutSection title="Navigation" shortcuts={categories.navigation} />
+          <ShortcutSection title="System" shortcuts={categories.system} />
         </div>
 
         <div className="p-4 border-t border-slate-700">

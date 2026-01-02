@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { useSimulationStore } from '../../state/store';
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import KeyboardShortcutsModal from '../ui/KeyboardShortcutsModal';
 import MealBuilder from './MealBuilder';
@@ -136,6 +136,15 @@ const ActionButtons = memo(function ActionButtons() {
   const mealRef = useRef<HTMLDivElement>(null);
   const exerciseRef = useRef<HTMLDivElement>(null);
 
+  // Handlers for keyboard shortcuts
+  const handleOpenSettings = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('open-settings'));
+  }, []);
+
+  const handleExportData = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('export-data'));
+  }, []);
+
   // Enable keyboard shortcuts
   useKeyboardShortcuts({
     isMealOpen: showMealOptions,
@@ -144,6 +153,8 @@ const ActionButtons = memo(function ActionButtons() {
     setIsExerciseOpen: setShowExerciseOptions,
     showHelpModal,
     setShowHelpModal,
+    onOpenSettings: handleOpenSettings,
+    onExportData: handleExportData,
   });
 
   // Close dropdowns when clicking outside
