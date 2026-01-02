@@ -374,10 +374,8 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
   },
 
   logMeal: async (meal: any) => {
-    const { state, addToast, connected } = get();
+    const { state, addToast } = get();
     if (!state) return;
-
-    const success = () => addToast(`Meal logged: ${meal.name || 'Custom meal'}`, 'success');
 
     try {
       const response = await fetch(`${API_BASE}/simulation/${state.userId}/meal`, {
@@ -385,57 +383,20 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(meal),
       });
-      if (response.ok) success();
-    } catch (error) {
-      // Demo mode: apply hormone effects locally
-      if (!connected) {
-        const effects = simulateMealEffect(meal);
-        Object.entries(effects).forEach(([hormone, data]) => {
-          addHormoneEffect(hormone, data.peak, data.duration);
-        });
-
-        // Update energy state with meal macros
-        const updatedState = { ...state };
-        updatedState.energy.caloriesConsumed +=
-          (meal.totalMacros?.carbohydrates || 0) * 4 +
-          (meal.totalMacros?.proteins || 0) * 4 +
-          (meal.totalMacros?.fats || 0) * 9;
-        updatedState.energy.carbohydrates.consumed += meal.totalMacros?.carbohydrates || 0;
-        updatedState.energy.proteins.consumed += meal.totalMacros?.proteins || 0;
-        updatedState.energy.fats.consumed += meal.totalMacros?.fats || 0;
-        updatedState.recentMeals = [...updatedState.recentMeals, meal as any];
-
-        // Update metabolic state
-        if (meal.glycemicLoad > 30) {
-          updatedState.energy.substrateUtilization.metabolicState = 'postprandial' as any;
-        }
-
-        set({ state: updatedState });
-        success();
-
-        // Track achievement
-        useAchievementsStore.getState().trackMeal();
-
-        // Track hormone peaks for achievements
-        if (updatedState.hormones.insulin.currentValue > 20) {
-          useAchievementsStore.getState().trackHormonePeak('insulin', updatedState.hormones.insulin.currentValue);
-        }
-
-        // Track protein target hit
-        if (updatedState.energy.proteins.consumed >= updatedState.energy.proteins.target) {
-          useAchievementsStore.getState().trackProteinStreak();
-        }
+      if (response.ok) {
+        addToast(`Meal logged: ${meal.name || 'Custom meal'}`, 'success');
       } else {
-        addToast('Failed to log meal', 'warning');
+        addToast(`Failed to log meal: ${response.status}`, 'error');
       }
+    } catch (error) {
+      addToast('Failed to log meal: Network error', 'error');
+      console.error('Failed to log meal:', error);
     }
   },
 
   logExercise: async (exercise: any) => {
-    const { state, addToast, connected } = get();
+    const { state, addToast } = get();
     if (!state) return;
-
-    const success = () => addToast(`Exercise logged: ${exercise.name || 'Custom exercise'}`, 'success');
 
     try {
       const response = await fetch(`${API_BASE}/simulation/${state.userId}/exercise`, {
@@ -443,52 +404,14 @@ export const useSimulationStore = create<SimulationStore>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(exercise),
       });
-      if (response.ok) success();
-    } catch (error) {
-      // Demo mode: apply hormone effects locally
-      if (!connected) {
-        const effects = simulateExerciseEffect(exercise);
-        Object.entries(effects).forEach(([hormone, data]) => {
-          addHormoneEffect(hormone, data.peak, data.duration);
-        });
-
-        // Update energy state with exercise burn
-        const duration = exercise.exercises?.[0]?.sets?.reduce((sum: number, s: any) => sum + s.duration, 0) || 0;
-        const caloriesBurned = Math.round(duration * 0.15 * (exercise.perceivedExertion || 5) / 5);
-
-        const updatedState = { ...state };
-        updatedState.energy.caloriesBurned += caloriesBurned;
-        updatedState.recentExercises = [...updatedState.recentExercises, exercise as any];
-
-        // Update metabolic state
-        updatedState.energy.substrateUtilization.metabolicState = 'exercise' as any;
-        if (exercise.category === 'cardio') {
-          updatedState.energy.substrateUtilization.fatOxidation = Math.min(0.3, 0.1 + duration / 3600);
-        }
-
-        // Update muscle damage and mTOR
-        if (exercise.category === 'resistance') {
-          updatedState.muscle.recoveryStatus.muscleDamage = Math.min(0.5, 0.1 + (exercise.perceivedExertion || 7) / 20);
-          updatedState.muscle.mtorSignaling.activity = Math.min(0.8, 0.5 + (exercise.perceivedExertion || 7) / 20);
-          updatedState.muscle.mtorSignaling.mechanicalStimulus = (exercise.perceivedExertion || 7) / 10;
-        }
-
-        set({ state: updatedState });
-        success();
-
-        // Track achievement
-        useAchievementsStore.getState().trackExercise();
-
-        // Track hormone peaks for achievements
-        if (updatedState.hormones.testosterone.currentValue > 20) {
-          useAchievementsStore.getState().trackHormonePeak('testosterone', updatedState.hormones.testosterone.currentValue);
-        }
-
-        // Track muscle gain
-        useAchievementsStore.getState().trackMuscleGain(updatedState.muscle.totalMass);
+      if (response.ok) {
+        addToast(`Exercise logged: ${exercise.name || 'Custom exercise'}`, 'success');
       } else {
-        addToast('Failed to log exercise', 'warning');
+        addToast(`Failed to log exercise: ${response.status}`, 'error');
       }
+    } catch (error) {
+      addToast('Failed to log exercise: Network error', 'error');
+      console.error('Failed to log exercise:', error);
     }
   },
 

@@ -23,6 +23,7 @@ import ScenarioSelector from '../scenarios/ScenarioSelector';
 import ActionButtons from './ActionButtons';
 import BloodGlucosePanel from './BloodGlucosePanel';
 import WaterTracker from './WaterTracker';
+import SupplementTracker from './SupplementTracker';
 import ExerciseHistoryPanel from './ExerciseHistoryPanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import RecommendationsPanel from './RecommendationsPanel';
@@ -321,6 +322,11 @@ function Dashboard() {
 
       {/* Water Intake Tracker */}
       <WaterTracker />
+
+      {/* Supplement Tracker */}
+      <SectionBoundary sectionName="Supplement Tracker">
+        <SupplementTracker />
+      </SectionBoundary>
 
       {/* Health Alerts - Real-time monitoring */}
       <div id="health-alerts-panel">
