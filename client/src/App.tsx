@@ -8,17 +8,37 @@ import Dashboard from './components/dashboard/Dashboard';
 import Header from './components/Header';
 import LoadingScreen from './components/LoadingScreen';
 import ToastContainer from './components/ui/Toast';
+import OfflineIndicator from './components/ui/OfflineIndicator';
 import { useDemoSimulation } from './hooks/useDemoSimulation';
+import { useOffline } from './hooks/useOffline';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 const DEFAULT_USER_ID = 'demo-user';
 
 function AppContent() {
-  const { setState, connected, loading, initialize, toasts, removeToast } = useSimulationStore();
+  const { setState, connected, loading, initialize, toasts, removeToast, state } = useSimulationStore();
   const [initialized, setInitialized] = useState(false);
+  const { persistState, isOnline } = useOffline();
 
   // Enable demo simulation with realistic hormone responses
   useDemoSimulation();
+
+  // Persist state when it changes (for offline recovery)
+  useEffect(() => {
+    if (state) {
+      persistState(state);
+    }
+  }, [state, persistState]);
+
+  // Sync state when coming back online
+  useEffect(() => {
+    const handleSync = () => {
+      // Custom event handler for offline sync
+    };
+
+    window.addEventListener('offline-sync', handleSync);
+    return () => window.removeEventListener('offline-sync', handleSync);
+  }, []);
 
   useEffect(() => {
     if (!initialized) {
@@ -45,6 +65,7 @@ function AppContent() {
         </Suspense>
       </main>
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <OfflineIndicator />
     </div>
   );
 }
