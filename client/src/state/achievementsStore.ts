@@ -27,8 +27,14 @@ interface AchievementStats {
   perfectDay: boolean;
   fastingStreak: number;
   proteinStreak: number;
+  supplementsLogged: number;
+  supplementsStreak: number;
+  waterGlasses: number;
+  waterGoalDays: number;
   lastActiveDate: string;
   initialMuscleMass: number;
+  lastSupplementDate: string;
+  consecutiveSupplementDays: number;
 }
 
 interface AchievementsStore {
@@ -47,6 +53,9 @@ interface AchievementsStore {
   trackPerfectDay: () => void;
   trackFastingStreak: (hours: number) => void;
   trackProteinStreak: () => void;
+  trackSupplement: () => void;
+  trackWater: (glasses: number) => void;
+  trackWaterGoal: () => void;
   checkAchievements: () => Achievement[];
   dismissNotification: () => void;
   reset: () => void;
@@ -65,8 +74,14 @@ const DEFAULT_STATS: AchievementStats = {
   perfectDay: false,
   fastingStreak: 0,
   proteinStreak: 0,
+  supplementsLogged: 0,
+  supplementsStreak: 0,
+  waterGlasses: 0,
+  waterGoalDays: 0,
   lastActiveDate: '',
   initialMuscleMass: 0,
+  lastSupplementDate: '',
+  consecutiveSupplementDays: 0,
 };
 
 function loadAchievements(): UnlockedAchievement[] {
@@ -223,6 +238,60 @@ export const useAchievementsStore = create<AchievementsStore>((set, get) => ({
     get().checkAchievements();
   },
 
+  trackSupplement: () => {
+    const { stats } = get();
+    const today = new Date().toDateString();
+    const updatedStats = { ...stats };
+
+    // Increment total supplements logged
+    updatedStats.supplementsLogged = stats.supplementsLogged + 1;
+
+    // Handle supplement streak
+    if (stats.lastSupplementDate === today) {
+      // Already logged a supplement today, no change to streak
+    } else if (stats.lastSupplementDate === new Date(Date.now() - 86400000).toDateString()) {
+      // Logged yesterday, increment streak
+      updatedStats.consecutiveSupplementDays = stats.consecutiveSupplementDays + 1;
+      updatedStats.supplementsStreak = Math.max(stats.supplementsStreak, updatedStats.consecutiveSupplementDays);
+    } else if (stats.lastSupplementDate !== today) {
+      // First supplement today or streak broken
+      if (stats.lastSupplementDate !== '' && stats.lastSupplementDate !== new Date(Date.now() - 86400000).toDateString()) {
+        // Streak broken
+        updatedStats.consecutiveSupplementDays = 1;
+      } else {
+        // First supplement ever
+        updatedStats.consecutiveSupplementDays = 1;
+      }
+      updatedStats.supplementsStreak = Math.max(stats.supplementsStreak, updatedStats.consecutiveSupplementDays);
+    }
+    updatedStats.lastSupplementDate = today;
+
+    set({ stats: updatedStats });
+    saveStats(updatedStats);
+    get().checkAchievements();
+  },
+
+  trackWater: (glasses: number) => {
+    const { stats } = get();
+    const updatedStats = { ...stats, waterGlasses: stats.waterGlasses + glasses };
+    set({ stats: updatedStats });
+    saveStats(updatedStats);
+    get().checkAchievements();
+  },
+
+  trackWaterGoal: () => {
+    const { stats } = get();
+    const today = new Date().toDateString();
+
+    // Only count if we haven't already counted today
+    if (stats.lastActiveDate !== today) {
+      const updatedStats = { ...stats, waterGoalDays: stats.waterGoalDays + 1 };
+      set({ stats: updatedStats });
+      saveStats(updatedStats);
+      get().checkAchievements();
+    }
+  },
+
   checkAchievements: () => {
     const { unlockedAchievements, stats } = get();
     const unlockedIds = new Set(unlockedAchievements.map((a) => a.id));
@@ -241,6 +310,10 @@ export const useAchievementsStore = create<AchievementsStore>((set, get) => ({
       perfectDay: stats.perfectDay,
       fastingStreak: stats.fastingStreak,
       proteinStreak: stats.proteinStreak,
+      supplementsLogged: stats.supplementsLogged,
+      supplementsStreak: stats.supplementsStreak,
+      waterGlasses: stats.waterGlasses,
+      waterGoalDays: stats.waterGoalDays,
     };
 
     // Check legendary achievement (all rares unlocked)
@@ -323,6 +396,18 @@ export function getAchievementProgress(achievementId: string): { current: number
     case 'first-scenario':
     case 'scenario-master':
       return { current: stats.scenariosCompleted, target: achievement.id === 'scenario-master' ? 3 : 1, label: 'scenarios' };
+    case 'supplement-tracker':
+      return { current: stats.supplementsLogged, target: achievement.tierLevel === 1 ? 10 : achievement.tierLevel === 2 ? 50 : 150, label: 'logged' };
+    case 'supplement-streak-7':
+      return { current: stats.supplementsStreak, target: 7, label: 'days' };
+    case 'supplement-streak-30':
+      return { current: stats.supplementsStreak, target: 30, label: 'days' };
+    case 'water-tracker':
+      return { current: stats.waterGlasses, target: achievement.tierLevel === 1 ? 50 : achievement.tierLevel === 2 ? 200 : achievement.tierLevel === 3 ? 500 : 1000, label: 'glasses' };
+    case 'water-goal-7':
+      return { current: stats.waterGoalDays, target: 7, label: 'days' };
+    case 'water-goal-30':
+      return { current: stats.waterGoalDays, target: 30, label: 'days' };
     default:
       // For first-meal, first-workout, first-sleep, use the count as progress
       if (achievementId === 'first-meal') {
@@ -333,6 +418,12 @@ export function getAchievementProgress(achievementId: string): { current: number
       }
       if (achievementId === 'first-sleep') {
         return { current: stats.sleepSessions, target: 1, label: 'session' };
+      }
+      if (achievementId === 'first-supplement') {
+        return { current: stats.supplementsLogged, target: 1, label: 'supplement' };
+      }
+      if (achievementId === 'first-glass') {
+        return { current: stats.waterGlasses, target: 1, label: 'glass' };
       }
       return { current: 0, target: 1, label: '' };
   }

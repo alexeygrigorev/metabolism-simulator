@@ -4,6 +4,7 @@
 
 import { memo, useState, useMemo, useEffect } from 'react';
 import { SUPPLEMENTS, SUPPLEMENT_CATEGORIES, getSupplementById, getSupplementInteractions, Supplement } from '../../data/supplements';
+import { useAchievementsStore } from '../../state/achievementsStore';
 
 interface LoggedSupplement {
   id: string;
@@ -85,6 +86,9 @@ const SupplementTracker = memo(function SupplementTracker({ onSupplementLogged }
     } catch {
       // Ignore errors
     }
+
+    // Track achievement
+    useAchievementsStore.getState().trackSupplement();
 
     // Notify parent
     onSupplementLogged?.(selectedSupplement, selectedTiming);

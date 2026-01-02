@@ -6,8 +6,9 @@
 // Displays visual indicators for glasses consumed and remaining.
 // ============================================================================
 
-import { memo, useState, useCallback, useMemo } from 'react';
+import { memo, useState, useCallback, useMemo, useEffect } from 'react';
 import { useSimulationStore } from '../../state/store';
+import { useAchievementsStore } from '../../state/achievementsStore';
 
 const STORAGE_KEY = 'metabol-sim-water-intake';
 const GLASS_ML = 250; // Standard glass size in ml
@@ -110,6 +111,15 @@ const WaterTracker = memo(function WaterTracker() {
     setWaterData(newData);
     saveWaterData(newData);
 
+    // Track water achievement (track each glass as 1 unit)
+    useAchievementsStore.getState().trackWater(1);
+
+    // Track water goal achievement when reaching 100%
+    const newPercent = Math.min(100, Math.round((newMl / DAILY_GOAL_ML) * 100));
+    if (newPercent >= 100 && percentComplete < 100) {
+      useAchievementsStore.getState().trackWaterGoal();
+    }
+
     // Also log to the simulation for consistency
     await logMeal({
       id: Date.now().toString(),
@@ -120,7 +130,7 @@ const WaterTracker = memo(function WaterTracker() {
       glycemicLoad: 0,
       insulinResponse: { peak: 0, magnitude: 0, duration: 0, areaUnderCurve: 0 },
     });
-  }, [waterData, logMeal]);
+  }, [waterData, logMeal, percentComplete]);
 
   /**
    * Remove a glass of water (undo)

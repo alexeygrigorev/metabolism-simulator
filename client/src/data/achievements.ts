@@ -4,7 +4,7 @@
 
 export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'diamond';
 export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
-export type AchievementCategory = 'metabolism' | 'hormones' | 'muscle' | 'lifestyle' | 'milestone';
+export type AchievementCategory = 'metabolism' | 'hormones' | 'muscle' | 'lifestyle' | 'milestone' | 'supplements';
 
 export interface Achievement {
   id: string;
@@ -34,6 +34,10 @@ export interface AchievementState {
   perfectDay: boolean;
   fastingStreak: number;
   proteinStreak: number;
+  supplementsLogged: number;
+  supplementsStreak: number; // Consecutive days with supplements
+  waterGlasses: number;
+  waterGoalDays: number; // Days where water goal was met
 }
 
 const RARITY_COLORS: Record<AchievementRarity, string> = {
@@ -369,6 +373,117 @@ export const ACHIEVEMENTS: Achievement[] = [
       'Use the simulator consistently'
     )
   ),
+
+  // ===== SUPPLEMENTS CATEGORY =====
+  {
+    id: 'first-supplement',
+    name: 'Supplement Starter',
+    description: 'Log your first supplement',
+    icon: '💊',
+    category: 'supplements',
+    rarity: 'common',
+    xpReward: XP_BY_RARITY.common,
+    condition: (s) => s.supplementsLogged >= 1,
+    hint: 'Log a supplement to unlock this achievement',
+  },
+  // Supplement tiers
+  ...((): Achievement[] => {
+    const tiers: AchievementTier[] = ['bronze', 'silver', 'gold'];
+    const targets = [10, 50, 150];
+    return tiers.map((tier, i) =>
+      createTieredAchievement(
+        'supplement-tracker',
+        'Supplement Tracker',
+        '🧪',
+        'supplements',
+        i === 2 ? 'epic' : 'rare',
+        tier,
+        i + 1,
+        targets[i],
+        'logged',
+        (s, target) => s.supplementsLogged >= target,
+        'Log supplements consistently'
+      )
+    );
+  })(),
+  {
+    id: 'supplement-streak-7',
+    name: 'Consistent Consumer',
+    description: 'Take supplements for 7 consecutive days',
+    icon: '📆',
+    category: 'supplements',
+    rarity: 'rare',
+    xpReward: XP_BY_RARITY.rare,
+    condition: (s) => s.supplementsStreak >= 7,
+  },
+  {
+    id: 'supplement-streak-30',
+    name: 'Supplement Devotee',
+    description: 'Take supplements for 30 consecutive days',
+    icon: '🏅',
+    category: 'supplements',
+    rarity: 'epic',
+    tier: 'gold',
+    tierLevel: 2,
+    xpReward: XP_BY_RARITY.epic,
+    condition: (s) => s.supplementsStreak >= 30,
+  },
+
+  // ===== WATER INTAKE ACHIEVEMENTS =====
+  {
+    id: 'first-glass',
+    name: 'Hydration Hero',
+    description: 'Log your first glass of water',
+    icon: '💧',
+    category: 'lifestyle',
+    rarity: 'common',
+    xpReward: XP_BY_RARITY.common,
+    condition: (s) => s.waterGlasses >= 1,
+    hint: 'Log water intake to unlock this achievement',
+  },
+  // Water glasses tiers
+  ...((): Achievement[] => {
+    const tiers: AchievementTier[] = ['bronze', 'silver', 'gold', 'diamond'];
+    const targets = [50, 200, 500, 1000];
+    return tiers.map((tier, i) =>
+      createTieredAchievement(
+        'water-tracker',
+        'Water Tracker',
+        '🌊',
+        'lifestyle',
+        i === 3 ? 'epic' : 'rare',
+        tier,
+        i + 1,
+        targets[i],
+        'glasses',
+        (s, target) => s.waterGlasses >= target,
+        'Log water intake consistently'
+      )
+    );
+  })(),
+  {
+    id: 'water-goal-7',
+    name: 'Wellness Week',
+    description: 'Hit your daily water goal for 7 days',
+    icon: '💎',
+    category: 'lifestyle',
+    rarity: 'rare',
+    xpReward: XP_BY_RARITY.rare,
+    condition: (s) => s.waterGoalDays >= 7,
+  },
+  {
+    id: 'water-goal-30',
+    name: 'Hydration Master',
+    description: 'Hit your daily water goal for 30 days',
+    icon: '🏆',
+    category: 'lifestyle',
+    rarity: 'epic',
+    tier: 'gold',
+    tierLevel: 2,
+    xpReward: XP_BY_RARITY.epic,
+    condition: (s) => s.waterGoalDays >= 30,
+  },
+
   {
     id: 'metabolism-master',
     name: 'Metabolism Master',
