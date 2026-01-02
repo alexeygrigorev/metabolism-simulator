@@ -1,9 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Bundle analyzer - generates stats.html in build output
+    visualizer({
+      filename: 'dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
   resolve: {
     alias: {
       '@metabol-sim/shared': path.resolve(__dirname, '../shared/src'),
@@ -22,6 +32,25 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  build: {
+    // Split chunks for better caching and smaller bundles
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React and ReactDOM in separate chunk
+          'react-vendor': ['react', 'react-dom'],
+          // Zustand state management
+          'state': ['zustand'],
+          // Charts and visualization
+          'charts': [],
+        },
+      },
+    },
+    // Enable source maps for production debugging
+    sourcemap: true,
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
   },
   test: {
     globals: true,
