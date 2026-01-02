@@ -117,10 +117,10 @@ const HormoneTimeSeries = memo(function HormoneTimeSeries() {
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+    <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden" role="region" aria-labelledby="hormone-time-series-title">
       <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center">
-        <h3 className="font-semibold text-white">Hormone Time Series</h3>
-        <span className="text-xs text-slate-400">
+        <h3 id="hormone-time-series-title" className="font-semibold text-white">Hormone Time Series</h3>
+        <span className="text-xs text-slate-400" aria-live="polite">
           {enabledHormones.size}/4 hormones shown
         </span>
       </div>
@@ -132,6 +132,8 @@ const HormoneTimeSeries = memo(function HormoneTimeSeries() {
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             className="w-full h-full"
+            role="img"
+            aria-label={`Hormone level chart showing ${Array.from(enabledHormones).join(', ')}. Y-axis ranges from ${chartData.minValue.toFixed(0)} to ${chartData.maxValue.toFixed(0)}.`}
           >
             {/* Grid lines */}
             <line x1="0" y1="25" x2="100" y2="25" stroke="#334155" strokeWidth="0.2" />
@@ -169,12 +171,14 @@ const HormoneTimeSeries = memo(function HormoneTimeSeries() {
         </div>
 
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Hormone visibility controls">
           {HORMONE_CONFIGS.map(config => (
             <button
               key={config.key}
               onClick={() => toggleHormone(config.key)}
               disabled={!enabledHormones.has(config.key) && enabledHormones.size >= 4}
+              aria-pressed={enabledHormones.has(config.key)}
+              aria-label={`Toggle ${config.label} hormone ${enabledHormones.has(config.key) ? 'visible' : 'hidden'}`}
               className={`
                 px-2 py-1 text-xs rounded-full border transition-all
                 ${enabledHormones.has(config.key)
@@ -192,7 +196,7 @@ const HormoneTimeSeries = memo(function HormoneTimeSeries() {
           ))}
         </div>
 
-        <p className="mt-2 text-xs text-slate-500 text-center">
+        <p className="mt-2 text-xs text-slate-500 text-center" role="note">
           Click to toggle hormones (max 4 at a time)
         </p>
       </div>

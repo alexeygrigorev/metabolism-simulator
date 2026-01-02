@@ -133,6 +133,8 @@ const MatrixCell = memo(function MatrixCell({
     <HormoneTooltip hormoneId={hormoneId} currentValue={currentValue}>
       <button
         onClick={onSelect}
+        aria-pressed={isSelected}
+        aria-label={`${edu.name} (${edu.abbreviation}): ${currentValue.toFixed(1)} - ${isSelected ? 'Click to deselect' : 'Click to select'}`}
         className={`px-2 py-1 rounded text-xs font-medium transition-all ${
           isSelected
             ? 'bg-blue-600 text-white'
@@ -211,11 +213,13 @@ const CorrelationCell = memo(function CorrelationCell({
   return (
     <HormoneTooltip hormoneId={h2} currentValue={value2}>
       <div
+        role="gridcell"
         className={`aspect-square ${bgClass} rounded flex items-center justify-center cursor-help transition-all`}
         style={{ backgroundColor: bgColor }}
         onMouseEnter={onHover}
         onMouseLeave={onLeave}
         title={title}
+        aria-label={`${getFullName(h1)} and ${getFullName(h2)}: ${rel.description || 'No significant relationship'}`}
       >
         {(rel.strength > 0 || rel.actualCorrelation !== undefined) && (
           <span className="text-sm" style={{ opacity }}>
@@ -312,12 +316,12 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
   }, []);
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5" role="region" aria-labelledby="correlation-matrix-title">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-        <h2 className="text-lg font-semibold text-white">Hormone Correlation Matrix</h2>
+        <h2 id="correlation-matrix-title" className="text-lg font-semibold text-white">Hormone Correlation Matrix</h2>
         <div className="flex items-center gap-4">
           {/* Toggle between theoretical and actual correlations */}
-          <div className="flex items-center gap-2 bg-slate-900 rounded-lg px-3 py-1.5">
+          <div className="flex items-center gap-2 bg-slate-900 rounded-lg px-3 py-1.5" role="group" aria-label="Correlation mode toggle">
             <span className="text-xs text-slate-400">Theoretical</span>
             <button
               onClick={() => setShowActualCorrelations(!showActualCorrelations)}
@@ -325,7 +329,7 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
                 showActualCorrelations ? 'bg-blue-600' : 'bg-slate-600'
               }`}
               aria-pressed={showActualCorrelations}
-              aria-label="Toggle actual correlations"
+              aria-label={`Show ${showActualCorrelations ? 'theoretical' : 'actual'} correlations`}
             >
               <div
                 className={`w-4 h-4 bg-white rounded-full transition-transform ${
@@ -382,7 +386,12 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
       {/* Matrix */}
       <div className="overflow-x-auto">
         <div className="inline-block min-w-full">
-          <div className="grid gap-0.5" style={{ gridTemplateColumns: `40px repeat(${hormones.length}, 1fr)` }}>
+          <div
+            className="grid gap-0.5"
+            style={{ gridTemplateColumns: `40px repeat(${hormones.length}, 1fr)` }}
+            role="table"
+            aria-label="Hormone correlation matrix showing relationships between hormones"
+          >
             {/* Header row */}
             <div />
             {hormones.map((h, i) => (
@@ -390,6 +399,7 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
                 <div
                   className="text-xs font-semibold text-slate-400 p-2 text-center cursor-help hover:text-white hover:bg-slate-700/50 rounded transition-colors"
                   style={{ gridColumn: i + 2 }}
+                  role="columnheader"
                 >
                   {getShortName(h)}
                 </div>
@@ -398,10 +408,13 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
 
             {/* Matrix rows */}
             {hormones.map((h1, i) => (
-              <div key={h1} className="contents">
+              <div key={h1} className="contents" role="row">
                 {/* Row header */}
                 <HormoneTooltip hormoneId={h1} currentValue={currentValues[h1] || 0}>
-                  <div className="text-xs font-semibold text-slate-400 p-2 text-right cursor-help hover:text-white hover:bg-slate-700/50 rounded transition-colors">
+                  <div
+                    className="text-xs font-semibold text-slate-400 p-2 text-right cursor-help hover:text-white hover:bg-slate-700/50 rounded transition-colors"
+                    role="rowheader"
+                  >
                     {getShortName(h1)}
                   </div>
                 </HormoneTooltip>
