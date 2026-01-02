@@ -24,6 +24,7 @@ import ActionButtons from './ActionButtons';
 import BloodGlucosePanel from './BloodGlucosePanel';
 import WaterTracker from './WaterTracker';
 import SupplementTracker from './SupplementTracker';
+import StreaksPanel from './StreaksPanel';
 import ExerciseHistoryPanel from './ExerciseHistoryPanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import RecommendationsPanel from './RecommendationsPanel';
@@ -326,6 +327,11 @@ function Dashboard() {
       {/* Supplement Tracker */}
       <SectionBoundary sectionName="Supplement Tracker">
         <SupplementTracker />
+      </SectionBoundary>
+
+      {/* Streaks Panel */}
+      <SectionBoundary sectionName="Streaks">
+        <StreaksPanel />
       </SectionBoundary>
 
       {/* Health Alerts - Real-time monitoring */}
