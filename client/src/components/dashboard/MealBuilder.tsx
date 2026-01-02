@@ -4,6 +4,7 @@
 
 import { useState, useMemo, memo, useRef, useEffect } from 'react';
 import { useSimulationStore } from '../../state/store';
+import { useFavoritesStore } from '../../state/favoritesStore';
 import {
   Food,
   FoodCategory,
@@ -62,6 +63,22 @@ const FoodCard = memo(function FoodCard({
   onSelect: () => void;
   servings: number;
 }) {
+  const { isMealFavorite, addFavoriteMeal, removeFavoriteMeal } = useFavoritesStore();
+  const isFavorite = isMealFavorite(food.name);
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFavorite) {
+      removeFavoriteMeal(food.name);
+    } else {
+      addFavoriteMeal({
+        name: food.name,
+        macros: food.macros,
+        glycemicLoad: food.glycemicIndex,
+      });
+    }
+  };
+
   return (
     <div
       className={`p-3 rounded-lg border transition-all cursor-pointer ${
@@ -103,11 +120,24 @@ const FoodCard = memo(function FoodCard({
           </div>
         </div>
 
-        {isSelected && (
-          <div className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-            ✓
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          {/* Favorite button */}
+          <button
+            onClick={toggleFavorite}
+            className="p-1 hover:bg-slate-700/50 rounded transition-colors"
+            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <span className={`${isFavorite ? 'text-yellow-400' : 'text-slate-600'} transition-colors`}>
+              {isFavorite ? '⭐' : '☆'}
+            </span>
+          </button>
+
+          {isSelected && (
+            <div className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+              ✓
+            </div>
+          )}
+        </div>
       </div>
 
       {isSelected && servings > 0 && (

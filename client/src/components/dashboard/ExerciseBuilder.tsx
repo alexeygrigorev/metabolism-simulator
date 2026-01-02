@@ -8,6 +8,7 @@
 
 import { useState, useMemo, memo, useRef, useEffect, type ReactNode } from 'react';
 import { useSimulationStore } from '../../state/store';
+import { useFavoritesStore } from '../../state/favoritesStore';
 import {
   Exercise,
   ExerciseCategory,
@@ -61,6 +62,22 @@ const ExerciseCard = memo(function ExerciseCard({
   setCount: number;
 }) {
   const categoryInfo = CATEGORY_INFO[exercise.category];
+  const { isExerciseFavorite, addFavoriteExercise, removeFavoriteExercise } = useFavoritesStore();
+  const isFavorite = isExerciseFavorite(exercise.id);
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFavorite) {
+      removeFavoriteExercise(exercise.id);
+    } else {
+      addFavoriteExercise({
+        exerciseId: exercise.id,
+        exerciseName: exercise.name,
+        category: exercise.category,
+        defaultDuration: exercise.category === ExerciseCategory.Cardio ? 30 : 45,
+      });
+    }
+  };
 
   return (
     <div
@@ -102,11 +119,24 @@ const ExerciseCard = memo(function ExerciseCard({
           </div>
         </div>
 
-        {isSelected && setCount > 0 && (
-          <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-            {setCount}
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          {/* Favorite button */}
+          <button
+            onClick={toggleFavorite}
+            className="p-1 hover:bg-slate-700/50 rounded transition-colors"
+            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <span className={`${isFavorite ? 'text-yellow-400' : 'text-slate-600'} transition-colors`}>
+              {isFavorite ? '⭐' : '☆'}
+            </span>
+          </button>
+
+          {isSelected && setCount > 0 && (
+            <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+              {setCount}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
