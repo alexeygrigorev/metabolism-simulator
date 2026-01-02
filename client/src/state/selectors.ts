@@ -43,6 +43,9 @@ export const selectPaused = (state: SimulationStore) => state.paused;
 /** Select hormone history for sparklines */
 export const selectHormoneHistory = (state: SimulationStore) => state.hormoneHistory;
 
+/** Select toast notifications */
+export const selectToasts = (state: SimulationStore) => state.toasts;
+
 // ============================================================================
 // ENERGY SELECTORS
 // ============================================================================
