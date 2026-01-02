@@ -317,6 +317,11 @@ test.describe('Activity Log', () => {
   });
 
   test('should display activity log panel', async ({ page }) => {
+    // Scroll down to trigger lazy load for Activity Log section
+    // Scroll to the very bottom to ensure all lazy-loaded components are rendered
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+
     // Use data-testid for more reliable selection
     const activityLog = page.getByTestId('activity-log-panel');
     await expect(activityLog).toBeVisible({ timeout: 15000 });
@@ -336,8 +341,8 @@ test.describe('Activity Log', () => {
     await page.waitForTimeout(1000);
 
     // Scroll back down to check activity log
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.75));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
 
     // Check activity log panel exists
     await expect(page.getByTestId('activity-log-panel')).toBeVisible({ timeout: 5000 });
@@ -357,8 +362,8 @@ test.describe('Activity Log', () => {
     await page.waitForTimeout(1000);
 
     // Scroll back down to check activity log
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.75));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
 
     // Check activity log panel exists
     await expect(page.getByTestId('activity-log-panel')).toBeVisible({ timeout: 5000 });
@@ -377,8 +382,8 @@ test.describe('Activity Log', () => {
     await page.waitForTimeout(1000);
 
     // Scroll back down to check activity log
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.75));
-    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
 
     // Check activity log panel exists
     await expect(page.getByTestId('activity-log-panel')).toBeVisible({ timeout: 5000 });
