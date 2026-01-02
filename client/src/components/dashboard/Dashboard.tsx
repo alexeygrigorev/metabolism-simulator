@@ -29,6 +29,9 @@ import QuickActions from './QuickActions';
 import ExerciseHistoryPanel from './ExerciseHistoryPanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
 import MealTemplates from './MealTemplates';
+import WorkoutTemplates from './WorkoutTemplates';
+import MeasurementsTracker from './MeasurementsTracker';
+import RecoveryDashboard from './RecoveryDashboard';
 import RecommendationsPanel from './RecommendationsPanel';
 import HealthAlertsPanel from './HealthAlertsPanel';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
@@ -366,34 +369,51 @@ function Dashboard() {
       <HormoneGrid />
 
       {/* Time Series and Correlation Matrix charts with error boundaries - lazy load */}
-      <LazyLoad rootMargin="100px">
+      <LazyLoad rootMargin="2000px" threshold={0.01}>
         <ChartsSection />
       </LazyLoad>
 
       {/* Bottom row - Activity Log + Substrate Utilization - lazy load */}
-      <LazyLoad rootMargin="100px">
+      <LazyLoad rootMargin="2000px" threshold={0.01}>
         <ActivitySection />
       </LazyLoad>
 
       {/* Exercise section with workout history and log button - lazy load */}
-      <LazyLoad rootMargin="100px">
+      <LazyLoad rootMargin="2000px" threshold={0.01}>
         <ExerciseSection onOpenExerciseBuilder={() => setShowExerciseBuilder(true)} />
       </LazyLoad>
 
+      {/* Workout Templates - Quick workout logging */}
+      <SectionBoundary sectionName="Workout Templates">
+        <WorkoutTemplates />
+      </SectionBoundary>
+
+      {/* Body Measurements Tracker */}
+      <SectionBoundary sectionName="Body Measurements">
+        <MeasurementsTracker />
+      </SectionBoundary>
+
+      {/* Recovery & Readiness Dashboard - lazy load */}
+      <SectionBoundary sectionName="Recovery & Readiness">
+        <LazyLoad rootMargin="2000px" threshold={0.01}>
+          <RecoveryDashboard />
+        </LazyLoad>
+      </SectionBoundary>
+
       {/* Daily Goals - lazy load */}
-      <LazyLoad rootMargin="100px">
+      <LazyLoad rootMargin="2000px" threshold={0.01}>
         <DailyGoals />
       </LazyLoad>
 
       {/* Statistics - lazy load */}
       <SectionBoundary sectionName="Statistics & Trends">
-        <LazyLoad rootMargin="100px">
+        <LazyLoad rootMargin="2000px" threshold={0.01}>
           <StatisticsPanel />
         </LazyLoad>
       </SectionBoundary>
 
       {/* Hormone Insights - lazy load */}
-      <LazyLoad rootMargin="100px">
+      <LazyLoad rootMargin="2000px" threshold={0.01}>
         <HormoneInsights />
       </LazyLoad>
     </div>

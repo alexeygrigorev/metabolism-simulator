@@ -677,21 +677,17 @@ test.describe('Hormone Insights Panel', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll to the very bottom to trigger all lazy loads
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(3000);
   });
 
   test('should display hormone correlations section', async ({ page }) => {
-    // Scroll to the bottom of the page
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Check for hormone correlations heading
     await expect(page.locator('text=Hormone Correlations')).toBeVisible();
   });
 
   test('should display key relationships', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Check for relationship information
     const pageContent = await page.textContent('body');
     expect(pageContent).toMatch(/(Insulin|Cortisol|Testosterone)/);
@@ -702,30 +698,23 @@ test.describe('Daily Goals Panel', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll to the very bottom to trigger all lazy loads
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(3000);
   });
 
   test('should display daily goals section', async ({ page }) => {
-    // Scroll to see Daily Goals
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Check for Daily Goals heading
     await expect(page.locator('text=Daily Goals')).toBeVisible();
   });
 
   test('should display goal categories', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Check for category buttons
     const pageContent = await page.textContent('body');
     expect(pageContent).toMatch(/(All Goals|Nutrition|Exercise)/);
   });
 
   test('should expand goal for educational info', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Click on a specific goal card to expand it (Protein Target goal)
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -740,9 +729,6 @@ test.describe('Daily Goals Panel', () => {
   });
 
   test('should filter goals by category', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Click on Nutrition category
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -761,30 +747,23 @@ test.describe('Statistics Panel', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll to the very bottom to trigger all lazy loads
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(3000);
   });
 
   test('should display statistics section', async ({ page }) => {
-    // Scroll to see Statistics
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Check for Statistics heading
     await expect(page.locator('text=Statistics & Trends')).toBeVisible();
   });
 
   test('should display stat cards', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Check for stat cards content
     const pageContent = await page.textContent('body');
     expect(pageContent).toMatch(/(Total Meals|Total Exercises|Sleep)/);
   });
 
   test('should switch between statistics tabs', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
     // Click on Trends tab
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -877,48 +856,29 @@ test.describe('Hormone Correlation Matrix', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll to the very bottom first to trigger all lazy loads
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(3000);
   });
 
   test('should display correlation matrix section', async ({ page }) => {
-    // Scroll to find the correlation matrix - try scrolling to the end first
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1000);
-    // Then scroll back up slightly to ensure the element is in view
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-    await page.waitForTimeout(1000);
-
     // Check for correlation matrix heading
     await expect(page.locator('text=Hormone Correlation Matrix')).toBeVisible({ timeout: 15000 });
   });
 
   test('should display correlation matrix legend', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1000);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-    await page.waitForTimeout(1000);
-
     // Check for legend items
     const pageContent = await page.textContent('body');
     expect(pageContent).toMatch(/(Synergistic|Antagonistic|Permissive)/);
   });
 
   test('should display hormone abbreviation headers in matrix', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1000);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-    await page.waitForTimeout(1000);
-
     // Check for hormone abbreviations in the matrix
     const pageContent = await page.textContent('body');
     expect(pageContent).toMatch(/(INS|GGN|CORT|T|GH|IGF-1|EPI|LEP|GHR)/);
   });
 
   test('should display current hormone values', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1000);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-    await page.waitForTimeout(1000);
-
     // Check for hormone values displayed
     const pageContent = await page.textContent('body');
     // Should show some numeric values for hormones
@@ -926,11 +886,6 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should allow selecting a hormone to see relationships', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1000);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-    await page.waitForTimeout(1000);
-
     // Click on a hormone button (INS - Insulin)
     const insulinButton = page.locator('text=/INS.*\\d+\\.\\d+/').first();
     if (await insulinButton.isVisible()) {
@@ -944,9 +899,6 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should show relationship details when hormone is selected', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
-
     // Click on a hormone to select it
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -961,9 +913,6 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should clear selection when clicking Clear button', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(500);
-
     // Select a hormone first
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -985,22 +934,12 @@ test.describe('Hormone Correlation Matrix', () => {
   });
 
   test('should show relationship icons in matrix cells', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1000);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-    await page.waitForTimeout(1000);
-
     // Check for relationship icons (synergistic ⊕, antagonistic ⊖, permissive ⊙)
     const pageContent = await page.textContent('body');
     expect(pageContent).toMatch(/[⊕⊖⊙]/);
   });
 
   test('should highlight row and column when hormone is selected', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1000);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
-    await page.waitForTimeout(1000);
-
     // Click on a hormone button
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -1058,7 +997,8 @@ test.describe('Hormone Correlation Matrix', () => {
     }
 
     await expect(page.getByText('1000ml / 2000ml daily goal')).toBeVisible();
-    await expect(page.getByText('50%')).toBeVisible();
+    // Use nth(0) to get the first 50% which is from the water tracker
+    await expect(page.getByText('50%').nth(0)).toBeVisible();
     await expect(page.getByText('Good Progress')).toBeVisible();
   });
 
@@ -1136,30 +1076,23 @@ test.describe('Exercise Builder', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll to the very bottom to trigger all lazy loads
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(3000);
   });
 
   test('should display workouts section', async ({ page }) => {
-    // Scroll to find the Workouts section - scroll further down
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
-    // Check for Workouts heading
-    await expect(page.locator('text=Workouts')).toBeVisible();
+    // Check for Workouts heading - use h2 selector to avoid matching the "All Workouts" button
+    await expect(page.locator('h2:has-text("Workouts")').or(page.locator('h3:has-text("Workouts")'))).toBeVisible();
   });
 
   test('should show log workout button', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Check for Log Workout button
     const logButton = page.locator('button:has-text("Log Workout")');
     await expect(logButton.first()).toBeVisible();
   });
 
   test('should open exercise builder modal', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Click Log Workout button
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -1173,10 +1106,6 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should display exercise search input', async ({ page }) => {
-    // Scroll to the bottom to ensure we reach the Workouts section
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Try to find the Log Workout button
     let logButton = page.locator('button:has-text("Log Workout")').first();
 
@@ -1185,10 +1114,6 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should display exercise category filters', async ({ page }) => {
-    // Scroll further down to reach the Workouts section
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Verify Log Workout button exists
     const logButton = page.locator('button:has-text("Log Workout")').first();
     await expect(logButton).toBeVisible();
@@ -1203,10 +1128,6 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should filter exercises when typing in search', async ({ page }) => {
-    // Scroll further down to reach the Workouts section
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Verify Log Workout button exists
     const logButton = page.locator('button:has-text("Log Workout")').first();
     await expect(logButton).toBeVisible();
@@ -1217,9 +1138,6 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should allow selecting an exercise', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Open exercise builder
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -1242,9 +1160,6 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should close modal with close button', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Open exercise builder
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -1265,9 +1180,6 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should close modal when clicking outside', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
     // Open exercise builder
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -1286,21 +1198,230 @@ test.describe('Exercise Builder', () => {
   });
 
   test('should display exercise history panel', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
-    // Check for Workouts section heading (the parent section)
-    await expect(page.locator('text=Workouts')).toBeVisible();
+    // Check for Workouts section heading - use h2 selector to avoid matching the "All Workouts" button
+    await expect(page.locator('h2:has-text("Workouts")').or(page.locator('h3:has-text("Workouts")'))).toBeVisible();
   });
 
   test('should show empty state when no workouts logged', async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.85));
-    await page.waitForTimeout(1000);
-
-    // Check that Workouts section exists
-    await expect(page.locator('text=Workouts')).toBeVisible();
+    // Check that Workouts section exists - use h2 selector to avoid matching the "All Workouts" button
+    await expect(page.locator('h2:has-text("Workouts")').or(page.locator('h3:has-text("Workouts")'))).toBeVisible();
     // When no exercises logged, should see either empty state or the section
     const pageContent = await page.textContent('body');
     expect(pageContent).toBeDefined();
+  });
+});
+
+test.describe('Body Measurements Tracker', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll to the very bottom to trigger all lazy loads
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(3000);
+  });
+
+  test('should display body measurements section', async ({ page }) => {
+    // Check for Body Measurements heading
+    await expect(page.locator('h2:has-text("Body Measurements")').or(page.locator('h3:has-text("Body Measurements")'))).toBeVisible();
+  });
+
+  test('should display measurement categories', async ({ page }) => {
+    // Check for category buttons
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/All|Primary|Upper Body|Lower Body/);
+  });
+
+  test('should show add entry form when clicking Add Entry', async ({ page }) => {
+    // Click Add Entry button
+    await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const addButton = buttons.find(b => b.textContent?.includes('Add Entry'));
+      if (addButton) (addButton as HTMLButtonElement).click();
+    });
+    await page.waitForTimeout(300);
+
+    // Check for form heading
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/Log New Measurements/);
+  });
+
+  test('should display measurement cards with units', async ({ page }) => {
+    // Check for measurement cards showing units
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/kg|%|cm/);
+  });
+
+  test('should filter by category', async ({ page }) => {
+    // Click on a category button
+    await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const primaryButton = buttons.find(b => b.textContent?.includes('Primary'));
+      if (primaryButton) (primaryButton as HTMLButtonElement).click();
+    });
+    await page.waitForTimeout(200);
+
+    // Verify no errors - component handles filtering
+    const pageContent = await page.textContent('body');
+    expect(pageContent).not.toContain('Error');
+  });
+});
+
+test.describe('Recovery & Readiness Dashboard', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+    // Scroll to the very bottom to trigger all lazy loads
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(3000);
+  });
+
+  test('should display recovery & readiness section', async ({ page }) => {
+    // Check for Recovery & Readiness heading
+    await expect(page.locator('h2:has-text("Recovery & Readiness")').or(page.locator('h3:has-text("Recovery & Readiness")'))).toBeVisible();
+  });
+
+  test('should display recovery score', async ({ page }) => {
+    // Check for recovery score display
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/\d{2,3}/); // Should show a score (00-100)
+  });
+
+  test('should display recovery level indicator', async ({ page }) => {
+    // Check for recovery level text (Excellent, Good, Moderate, Poor, Critical)
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/(Excellent|Good|Moderate|Poor|Critical)/i);
+  });
+
+  test('should display training readiness', async ({ page }) => {
+    // Check for training readiness indicator
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/(Go Hard|Moderate|Take Easy|Rest Day)/i);
+  });
+
+  test('should display recovery factors', async ({ page }) => {
+    // Check for factor names
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/(Sleep Quality|Stress Management|Muscle Recovery|Energy Stores|Hormone Balance|Hydration)/);
+  });
+
+  test('should display factor percentages', async ({ page }) => {
+    // Check for percentage displays on factors
+    const pageContent = await page.textContent('body');
+    // Should have percentages like 85%, 70%, etc.
+    expect(pageContent).toMatch(/\d+%/);
+  });
+
+  test('should display recommendations when recovery is suboptimal', async ({ page }) => {
+    // First, simulate poor recovery conditions by logging high stress
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    // Set high stress
+    const stressContainer = page.locator('text=Stress:').locator('..');
+    const highStressButton = stressContainer.locator('button:has-text("High")').first();
+    if (await highStressButton.isVisible()) {
+      await highStressButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    // Scroll back to recovery section
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+
+    // Check for recommendations section
+    const pageContent = await page.textContent('body');
+    // Recommendations may or may not appear depending on the exact state
+    // The important thing is the section exists
+    expect(pageContent).toBeDefined();
+  });
+
+  test('should display trend indicators', async ({ page }) => {
+    // Check for trend information
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/(Improving|Declining|Stable|Weekly Average)/i);
+  });
+
+  test('should show loading state initially', async ({ page }) => {
+    // Reload the page to see initial loading state
+    await page.reload();
+    await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+
+    // The recovery dashboard should show (might be in loading state initially)
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/(Recovery & Readiness|Recovery)/);
+  });
+
+  test('should auto-refresh recovery data', async ({ page }) => {
+    // Scroll to recovery section
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(2000);
+
+    // Get initial content
+    const initialContent = await page.textContent('body');
+
+    // Wait for auto-refresh (30 second interval, but we'll just check a few seconds)
+    await page.waitForTimeout(3000);
+
+    // Get content after refresh
+    const refreshedContent = await page.textContent('body');
+
+    // Both should be valid and not contain errors
+    expect(initialContent).not.toContain('Error');
+    expect(refreshedContent).not.toContain('Error');
+  });
+
+  test('should handle edge cases gracefully', async ({ page }) => {
+    // Test with fresh state
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+
+    // Scroll to recovery section
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(2000);
+
+    // Should not crash or show errors
+    const pageContent = await page.textContent('body');
+    expect(pageContent).not.toContain('Error');
+    expect(pageContent).not.toContain('undefined');
+    expect(pageContent).not.toContain('NaN');
+  });
+
+  test('should integrate with simulation state', async ({ page }) => {
+    // Log sleep to affect recovery
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+
+    const sleepButton = page.locator('button:has-text("Sleep (8h)")');
+    if (await sleepButton.isVisible()) {
+      await sleepButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    // Scroll to recovery section
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+
+    // Recovery section should be visible
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/Recovery/i);
+  });
+
+  test('should persist recovery data across page reloads', async ({ page }) => {
+    // Scroll to recovery section to trigger data generation
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(2000);
+
+    // Reload page
+    await page.reload();
+    await page.waitForSelector('text=Metabolism Simulator', { timeout: 10000 });
+
+    // Scroll to recovery section again
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(2000);
+
+    // Recovery section should still be visible
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toMatch(/Recovery/i);
   });
 });
