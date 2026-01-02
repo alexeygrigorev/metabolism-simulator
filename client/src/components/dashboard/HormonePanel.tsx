@@ -109,7 +109,7 @@ const HormonePanel = memo(function HormonePanel({ hormone, label, color, unit }:
 
   return (
     <HormoneTooltip hormoneId={hormone} currentValue={currentValue}>
-      <div className={containerClass} style={{ boxShadow: glowEffect }}>
+      <div className={containerClass} style={{ boxShadow: glowEffect }} data-testid={`hormone-panel-${hormone}`}>
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold" style={{ color }}>{label}</h3>

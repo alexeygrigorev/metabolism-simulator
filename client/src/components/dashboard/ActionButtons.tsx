@@ -248,6 +248,7 @@ const ActionButtons = memo(function ActionButtons() {
             aria-expanded={showMealOptions}
             aria-haspopup="menu"
             aria-label="Log meal (press M to open)"
+            data-testid="log-meal-button"
           >
             🍽️ Log Meal
           </button>
@@ -292,6 +293,7 @@ const ActionButtons = memo(function ActionButtons() {
             aria-expanded={showExerciseOptions}
             aria-haspopup="menu"
             aria-label="Log exercise (press E to open)"
+            data-testid="log-exercise-button"
           >
             💪 Log Exercise
           </button>
@@ -322,6 +324,7 @@ const ActionButtons = memo(function ActionButtons() {
           onClick={handleSleep}
           title="Log 8 hours of quality sleep"
           aria-label="Log 8 hours of quality sleep"
+          data-testid="log-sleep-button"
         >
           😴 Sleep (8h)
         </button>
@@ -345,12 +348,13 @@ const ActionButtons = memo(function ActionButtons() {
           }}
           title="Log 250ml water"
           aria-label="Log 250ml water"
+          data-testid="log-water-button"
         >
           💧 Water (250ml)
         </button>
 
         {/* Stress buttons */}
-        <div className="flex gap-1 items-center" role="group" aria-label="Stress level controls">
+        <div className="flex gap-1 items-center" role="group" aria-label="Stress level controls" data-testid="stress-controls">
           <span className="text-sm text-slate-400" id="stress-label">Stress:</span>
           <button
             className="px-2 py-1 text-xs rounded bg-red-900/30 text-red-400 hover:bg-red-900/50 transition-colors"
@@ -358,6 +362,7 @@ const ActionButtons = memo(function ActionButtons() {
             title="Low stress"
             aria-label="Apply low stress"
             aria-describedby="stress-label"
+            data-testid="stress-low-button"
           >
             Low
           </button>
@@ -367,6 +372,7 @@ const ActionButtons = memo(function ActionButtons() {
             title="Moderate stress"
             aria-label="Apply moderate stress"
             aria-describedby="stress-label"
+            data-testid="stress-medium-button"
           >
             Med
           </button>
@@ -376,6 +382,7 @@ const ActionButtons = memo(function ActionButtons() {
             title="High stress"
             aria-label="Apply high stress"
             aria-describedby="stress-label"
+            data-testid="stress-high-button"
           >
             High
           </button>
