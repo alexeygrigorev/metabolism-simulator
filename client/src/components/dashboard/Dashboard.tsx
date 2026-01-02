@@ -28,6 +28,7 @@ import StreaksPanel from './StreaksPanel';
 import QuickActions from './QuickActions';
 import ExerciseHistoryPanel from './ExerciseHistoryPanel';
 import HealthMarkersPanel from './HealthMarkersPanel';
+import MealTemplates from './MealTemplates';
 import RecommendationsPanel from './RecommendationsPanel';
 import HealthAlertsPanel from './HealthAlertsPanel';
 import { ChartErrorBoundary } from '../charts/ChartErrorBoundary';
@@ -350,6 +351,11 @@ function Dashboard() {
 
       {/* Nutrition stats - MacroTracker */}
       <NutritionStatsRow />
+
+      {/* Meal Templates - Quick meal logging */}
+      <SectionBoundary sectionName="Meal Templates">
+        <MealTemplates />
+      </SectionBoundary>
 
       {/* Health Markers - Comprehensive blood work and vitals */}
       <SectionBoundary sectionName="Health Markers">
