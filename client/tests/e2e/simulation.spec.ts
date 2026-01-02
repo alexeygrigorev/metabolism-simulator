@@ -536,8 +536,10 @@ test.describe('Settings Panel', () => {
     await page.getByRole('button', { name: 'Open settings' }).click();
     await expect(page.locator('h2:has-text("Settings")')).toBeVisible();
 
-    // Check for export button
-    await expect(page.locator('button:has-text("Export Data")')).toBeVisible();
+    // Check for export buttons (JSON and CSV options)
+    await expect(page.locator('button:has-text("Export JSON")')).toBeVisible();
+    // DataExportButton has just "Export" text
+    await expect(page.locator('button').filter({ hasText: 'Export' }).first()).toBeVisible();
   });
 
   test('should display reset simulation button', async ({ page }) => {

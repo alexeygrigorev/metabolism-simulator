@@ -1142,8 +1142,9 @@ describe('SettingsPanel Component', () => {
   it('should show export and import buttons', () => {
     render(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
-    // Use partial text matching for buttons with emoji
-    expect(screen.getByText('Export Data')).toBeInTheDocument();
+    // Check for export buttons (JSON and CSV options)
+    expect(screen.getByText('Export JSON')).toBeInTheDocument();
+    expect(screen.getByText('Export')).toBeInTheDocument();
     expect(screen.getByText('Import Data')).toBeInTheDocument();
   });
 

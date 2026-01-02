@@ -5,6 +5,7 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { useSimulationStore } from '../../state/store';
 import type { SimulationState } from '@metabol-sim/shared';
+import DataExportButton from './DataExportButton';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -365,27 +366,34 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
               Data Management
             </h3>
             <div className="space-y-2">
-              <button
-                onClick={handleExportData}
-                disabled={isExporting || isImporting || !state}
-                className={`w-full px-4 py-2 rounded transition-colors text-sm flex items-center justify-center gap-2 ${
-                  isExporting || isImporting || !state
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-slate-700 hover:bg-slate-600 text-white'
-                }`}
-              >
-                {isExporting ? (
-                  <>
-                    <span className="animate-spin">⏳</span>
-                    <span>Exporting...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>📤</span>
-                    <span>Export Data</span>
-                  </>
-                )}
-              </button>
+              {/* Quick export options */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExportData}
+                  disabled={isExporting || isImporting || !state}
+                  className={`flex-1 px-4 py-2 rounded transition-colors text-sm flex items-center justify-center gap-2 ${
+                    isExporting || isImporting || !state
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                  }`}
+                  title="Export full simulation state as JSON"
+                >
+                  {isExporting ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Exporting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📤</span>
+                      <span>Export JSON</span>
+                    </>
+                  )}
+                </button>
+                <DataExportButton
+                  className="flex-1"
+                />
+              </div>
               <button
                 onClick={handleImportClick}
                 disabled={isExporting || isImporting}
