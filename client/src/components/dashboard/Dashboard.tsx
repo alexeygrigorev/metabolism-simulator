@@ -102,6 +102,7 @@ const DashboardHeader = memo(function DashboardHeader({
         {alertCounts.total > 0 && (
           <button
             onClick={() => document.getElementById('health-alerts-panel')?.scrollIntoView({ behavior: 'smooth' })}
+            aria-label={`View ${alertCounts.total} health alert${alertCounts.total !== 1 ? 's' : ''}`}
             className={`px-3 py-1.5 rounded-lg border transition-all hover:scale-105 ${
               hasCriticalAlerts
                 ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse'
@@ -111,7 +112,7 @@ const DashboardHeader = memo(function DashboardHeader({
             }`}
             title="View health alerts"
           >
-            <span className="text-sm">🔔</span>
+            <span className="text-sm" aria-hidden="true">🔔</span>
             <span className="font-semibold">{alertCounts.total}</span>
           </button>
         )}
@@ -121,24 +122,27 @@ const DashboardHeader = memo(function DashboardHeader({
           onClick={onInsightsOpen}
           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors flex items-center gap-2"
           title="View personalized metabolic health insights"
+          aria-label="Open metabolic insights dashboard"
         >
-          <span>📊</span>
+          <span aria-hidden="true">📊</span>
           <span className="hidden sm:inline">Insights</span>
         </button>
         <button
           onClick={onEducationOpen}
           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded transition-colors flex items-center gap-2"
           title="Learn about hormones and how they affect your metabolism"
+          aria-label="Open hormone education hub"
         >
-          <span>🧬</span>
+          <span aria-hidden="true">🧬</span>
           <span className="hidden sm:inline">Education Hub</span>
         </button>
         {!activeScenario && (
           <button
             onClick={onScenarioToggle}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors flex items-center gap-2"
+            aria-label="Browse scenarios"
           >
-            <span>📚</span>
+            <span aria-hidden="true">📚</span>
             <span>Scenarios</span>
           </button>
         )}

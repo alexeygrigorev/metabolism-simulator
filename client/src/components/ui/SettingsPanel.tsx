@@ -89,6 +89,46 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const titleId = 'settings-dialog-title';
+
+  // Focus trap and ESC key handling
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      // Trap focus within modal
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    // Focus first element when modal opens
+    setTimeout(() => {
+      const firstFocusable = modalRef.current?.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ) as HTMLElement;
+      firstFocusable?.focus();
+    }, 50);
+
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Apply theme
   useEffect(() => {
@@ -226,18 +266,22 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
     >
       <div
+        ref={modalRef}
         className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
-          <h2 className="text-lg font-semibold text-white">Settings</h2>
+          <h2 id={titleId} className="text-lg font-semibold text-white">Settings</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white transition-colors text-xl leading-none"
-            aria-label="Close"
+            aria-label="Close settings dialog"
           >
             ×
           </button>
@@ -246,14 +290,15 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
         {/* Content */}
         <div className="p-4 space-y-6">
           {/* Units */}
-          <section>
-            <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
+          <section aria-labelledby="units-heading">
+            <h3 id="units-heading" className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
               Units
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-slate-300">Measurement System</span>
+                <label htmlFor="measurement-system" className="text-slate-300">Measurement System</label>
                 <select
+                  id="measurement-system"
                   value={settings.timeUnit}
                   onChange={(e) => updateSetting('timeUnit', e.target.value as TimeUnit)}
                   className="bg-slate-700 text-white px-3 py-1.5 rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
@@ -263,8 +308,9 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
                 </select>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-300">Temperature</span>
+                <label htmlFor="temperature-unit" className="text-slate-300">Temperature</label>
                 <select
+                  id="temperature-unit"
                   value={settings.temperatureUnit}
                   onChange={(e) => updateSetting('temperatureUnit', e.target.value as TemperatureUnit)}
                   className="bg-slate-700 text-white px-3 py-1.5 rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
@@ -277,14 +323,15 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
           </section>
 
           {/* Simulation */}
-          <section>
-            <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
+          <section aria-labelledby="simulation-heading">
+            <h3 id="simulation-heading" className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
               Simulation
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-slate-300">Default Time Scale</span>
+                <label htmlFor="time-scale" className="text-slate-300">Default Time Scale</label>
                 <select
+                  id="time-scale"
                   value={settings.defaultTimeScale}
                   onChange={(e) => {
                     const value = Number(e.target.value);
@@ -300,8 +347,9 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
                 </select>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-300">Auto-Save Interval</span>
+                <label htmlFor="auto-save" className="text-slate-300">Auto-Save Interval</label>
                 <select
+                  id="auto-save"
                   value={settings.autoSaveInterval}
                   onChange={(e) => updateSetting('autoSaveInterval', Number(e.target.value))}
                   className="bg-slate-700 text-white px-3 py-1.5 rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
@@ -316,8 +364,8 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
           </section>
 
           {/* Notifications */}
-          <section>
-            <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
+          <section aria-labelledby="notifications-heading">
+            <h3 id="notifications-heading" className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
               Notifications
             </h3>
             <div className="space-y-3">
@@ -328,9 +376,12 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
                 </div>
                 <button
                   onClick={() => updateSetting('notificationsEnabled', !settings.notificationsEnabled)}
+                  aria-pressed={settings.notificationsEnabled}
+                  aria-label="Toggle toast notifications"
                   className={`w-12 h-6 rounded-full transition-colors ${
                     settings.notificationsEnabled ? 'bg-blue-600' : 'bg-slate-600'
                   }`}
+                  role="switch"
                 >
                   <div
                     className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -346,9 +397,12 @@ const SettingsPanel = memo(function SettingsPanel({ isOpen, onClose }: SettingsP
                 </div>
                 <button
                   onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+                  aria-pressed={settings.soundEnabled}
+                  aria-label="Toggle sound effects"
                   className={`w-12 h-6 rounded-full transition-colors ${
                     settings.soundEnabled ? 'bg-blue-600' : 'bg-slate-600'
                   }`}
+                  role="switch"
                 >
                   <div
                     className={`w-5 h-5 bg-white rounded-full transition-transform ${

@@ -1162,7 +1162,7 @@ describe('SettingsPanel Component', () => {
     const handleClose = vi.fn();
     render(<SettingsPanel isOpen={true} onClose={handleClose} />);
 
-    const closeButton = screen.getByRole('button', { name: 'Close' });
+    const closeButton = screen.getByRole('button', { name: 'Close settings dialog' });
     fireEvent.click(closeButton);
 
     expect(handleClose).toHaveBeenCalledTimes(1);

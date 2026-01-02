@@ -46,6 +46,7 @@ const HormoneTooltip = memo(function HormoneTooltip({
   const triggerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const tooltipId = `tooltip-${hormoneId}`;
 
   const education = getHormoneEducation(hormoneId);
   const status = getHormoneStatus(currentValue, hormoneId);
@@ -108,6 +109,16 @@ const HormoneTooltip = memo(function HormoneTooltip({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsVisible(!isVisible);
+    }
+    if (e.key === 'Escape' && isVisible) {
+      setIsVisible(false);
+    }
+  };
+
   const getStatusColor = () => {
     switch (status) {
       case 'low': return 'text-blue-400';
@@ -144,7 +155,13 @@ const HormoneTooltip = memo(function HormoneTooltip({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         className="inline-block cursor-help"
+        tabIndex={0}
+        role="button"
+        aria-label={`View ${education?.name || hormoneId} information`}
+        aria-expanded={isVisible}
+        aria-controls={tooltipId}
       >
         {children}
       </div>
@@ -154,9 +171,14 @@ const HormoneTooltip = memo(function HormoneTooltip({
           <div
             className="fixed inset-0 z-40"
             onClick={() => setIsVisible(false)}
+            aria-hidden="true"
           />
           <div
+            id={tooltipId}
             ref={tooltipRef}
+            role="dialog"
+            aria-modal="false"
+            aria-label={`${education?.name || hormoneId} information`}
             className="fixed z-50 w-80 max-h-[70vh] overflow-y-auto bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-4 text-sm"
             style={{
               top: `${position.top}px`,
@@ -189,6 +211,7 @@ const HormoneTooltip = memo(function HormoneTooltip({
               <button
                 onClick={() => setIsVisible(false)}
                 className="text-slate-400 hover:text-white transition-colors ml-2"
+                aria-label="Close tooltip"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -251,6 +274,8 @@ const HormoneTooltip = memo(function HormoneTooltip({
               <button
                 onClick={() => setExpandedSection(expandedSection === 'symptoms' ? null : 'symptoms')}
                 className="flex items-center justify-between w-full text-left mb-2"
+                aria-expanded={expandedSection === 'symptoms'}
+                aria-controls="symptoms-content"
               >
                 <h4 className="text-xs font-semibold text-yellow-400">SYMPTOMS OF IMBALANCE</h4>
                 <svg
@@ -258,13 +283,14 @@ const HormoneTooltip = memo(function HormoneTooltip({
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {expandedSection === 'symptoms' && (
-                <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div id="symptoms-content" className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
                   {/* High Symptoms */}
                   <div className="bg-red-500/10 rounded-lg p-2 border border-red-500/20">
                     <h5 className="text-xs font-semibold text-red-400 mb-1">HIGH LEVELS</h5>
