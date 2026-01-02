@@ -2,7 +2,7 @@
 // METABOLIC SIMULATOR - HORMONE CORRELATION MATRIX COMPONENT
 // ============================================================================
 
-import { memo, useState, useMemo } from 'react';
+import { memo, useState, useMemo, useCallback } from 'react';
 import { useSimulationStore } from '../../state/store';
 import { HORMONE_EDUCATION } from '../../data/hormoneEducation';
 import HormoneTooltip from '../ui/HormoneTooltip';
@@ -72,6 +72,125 @@ setRel(6, 8, 'synergistic', 0.4, 'Stress hormones often co-elevated');
 // Leptin-Ghrelin (inverse relationship)
 setRel(7, 8, 'antagonistic', 0.8, 'Leptin suppresses ghrelin (satiety vs hunger)');
 
+// Move helper functions outside component to avoid recreation on every render
+const getRelationshipColor = (relationship: CorrelationData['relationship'], strength: number) => {
+  const alpha = 0.3 + strength * 0.7;
+  switch (relationship) {
+    case 'synergistic': return `rgba(34, 197, 94, ${alpha})`; // green
+    case 'antagonistic': return `rgba(239, 68, 68, ${alpha})`; // red
+    case 'permissive': return `rgba(234, 179, 8, ${alpha})`; // yellow
+    default: return `rgba(71, 85, 105, ${alpha})`; // slate
+  }
+};
+
+const getRelationshipIcon = (relationship: CorrelationData['relationship']) => {
+  switch (relationship) {
+    case 'synergistic': return '⊕';
+    case 'antagonistic': return '⊖';
+    case 'permissive': return '⊙';
+    default: return '•';
+  }
+};
+
+const getShortName = (hormoneId: string) => {
+  const edu = HORMONE_EDUCATION[hormoneId];
+  return edu?.abbreviation || hormoneId.slice(0, 3).toUpperCase();
+};
+
+const getFullName = (hormoneId: string) => {
+  const edu = HORMONE_EDUCATION[hormoneId];
+  return edu?.name || hormoneId;
+};
+
+// Memoized matrix cell component for performance
+const MatrixCell = memo(function MatrixCell({
+  hormoneId,
+  currentValue,
+  selectedHormone,
+  isHovered,
+  onSelect,
+}: {
+  hormoneId: string;
+  currentValue: number;
+  selectedHormone: string | null;
+  isHovered: boolean;
+  onSelect: () => void;
+}) {
+  const edu = HORMONE_EDUCATION[hormoneId];
+  if (!currentValue || !edu) return null;
+
+  const isSelected = selectedHormone === hormoneId;
+
+  return (
+    <HormoneTooltip hormoneId={hormoneId} currentValue={currentValue}>
+      <button
+        onClick={onSelect}
+        className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+          isSelected
+            ? 'bg-blue-600 text-white'
+            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+        }`}
+      >
+        {edu.abbreviation}: {currentValue.toFixed(1)}
+      </button>
+    </HormoneTooltip>
+  );
+});
+
+// Memoized correlation cell component for performance
+const CorrelationCell = memo(function CorrelationCell({
+  h1,
+  h2,
+  rel,
+  selectedHormone,
+  isHovered,
+  onHover,
+  onLeave,
+  value1,
+  value2,
+}: {
+  h1: string;
+  h2: string;
+  rel: CorrelationData;
+  selectedHormone: string | null;
+  isHovered: boolean;
+  onHover: () => void;
+  onLeave: () => void;
+  value1: number;
+  value2: number;
+}) {
+  const isSelected = selectedHormone === h1 || selectedHormone === h2;
+
+  let bgClass = 'bg-slate-900/50';
+  if (isSelected && rel.strength > 0) {
+    bgClass = 'bg-blue-500/20';
+  } else if (isHovered) {
+    bgClass = 'bg-slate-700/50';
+  } else if (selectedHormone && (h1 === selectedHormone || h2 === selectedHormone)) {
+    bgClass = 'bg-slate-800';
+  }
+
+  return (
+    <HormoneTooltip hormoneId={h2} currentValue={value2}>
+      <div
+        className={`aspect-square ${bgClass} rounded flex items-center justify-center cursor-help transition-all`}
+        style={{
+          backgroundColor: rel.strength > 0 ? getRelationshipColor(rel.relationship, rel.strength) : undefined,
+        }}
+        onMouseEnter={onHover}
+        onMouseLeave={onLeave}
+        title={rel.description || `${getFullName(h1)} & ${getFullName(h2)}`}
+      >
+        {rel.strength > 0 && (
+          <span className="text-sm" style={{ opacity: 0.5 + rel.strength * 0.5 }}>
+            {getRelationshipIcon(rel.relationship)}
+          </span>
+        )}
+      </div>
+    </HormoneTooltip>
+  );
+});
+
 const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
   const { state } = useSimulationStore();
   const [selectedHormone, setSelectedHormone] = useState<string | null>(null);
@@ -89,34 +208,27 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
     return values;
   }, [state?.hormones]);
 
-  const getRelationshipColor = (relationship: CorrelationData['relationship'], strength: number) => {
-    const alpha = 0.3 + strength * 0.7;
-    switch (relationship) {
-      case 'synergistic': return `rgba(34, 197, 94, ${alpha})`; // green
-      case 'antagonistic': return `rgba(239, 68, 68, ${alpha})`; // red
-      case 'permissive': return `rgba(234, 179, 8, ${alpha})`; // yellow
-      default: return `rgba(71, 85, 105, ${alpha})`; // slate
-    }
-  };
+  // Memoize filtered relationships for selected hormone to avoid recalculation
+  const selectedRelationships = useMemo(() => {
+    if (!selectedHormone) return [];
+    const selectedIndex = hormones.indexOf(selectedHormone);
+    return hormones
+      .map((h, idx) => ({ hormone: h, rel: HORMONE_RELATIONSHIPS[selectedIndex][idx] }))
+      .filter(({ rel }) => rel.strength > 0);
+  }, [selectedHormone]);
 
-  const getRelationshipIcon = (relationship: CorrelationData['relationship']) => {
-    switch (relationship) {
-      case 'synergistic': return '⊕';
-      case 'antagonistic': return '⊖';
-      case 'permissive': return '⊙';
-      default: return '•';
-    }
-  };
+  // Use useCallback for event handlers to prevent recreation
+  const handleToggleHormone = useCallback((hormone: string) => {
+    setSelectedHormone(prev => prev === hormone ? null : hormone);
+  }, []);
 
-  const getShortName = (hormoneId: string) => {
-    const edu = HORMONE_EDUCATION[hormoneId];
-    return edu?.abbreviation || hormoneId.slice(0, 3).toUpperCase();
-  };
+  const handleCellHover = useCallback((h1: number, h2: number) => {
+    setHoveredCell({ h1, h2 });
+  }, []);
 
-  const getFullName = (hormoneId: string) => {
-    const edu = HORMONE_EDUCATION[hormoneId];
-    return edu?.name || hormoneId;
-  };
+  const handleCellLeave = useCallback(() => {
+    setHoveredCell(null);
+  }, []);
 
   return (
     <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
@@ -140,26 +252,16 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
 
       {/* Current values row */}
       <div className="mb-4 flex flex-wrap gap-2">
-        {hormones.map(h => {
-          const value = currentValues[h];
-          const edu = HORMONE_EDUCATION[h];
-          if (!value || !edu) return null;
-          const isSelected = selectedHormone === h;
-          return (
-            <HormoneTooltip key={h} hormoneId={h} currentValue={value}>
-              <button
-                onClick={() => setSelectedHormone(isSelected ? null : h)}
-                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                  isSelected
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
-              >
-                {edu.abbreviation}: {value.toFixed(1)}
-              </button>
-            </HormoneTooltip>
-          );
-        })}
+        {hormones.map(h => (
+          <MatrixCell
+            key={h}
+            hormoneId={h}
+            currentValue={currentValues[h] || 0}
+            selectedHormone={selectedHormone}
+            isHovered={false}
+            onSelect={() => handleToggleHormone(h)}
+          />
+        ))}
       </div>
 
       {/* Matrix */}
@@ -190,41 +292,20 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
                 </HormoneTooltip>
 
                 {/* Cells */}
-                {hormones.map((h2, j) => {
-                  const isSelected = selectedHormone === h1 || selectedHormone === h2;
-                  const isHovered = hoveredCell?.h1 === i && hoveredCell?.h2 === j;
-                  const rel = HORMONE_RELATIONSHIPS[i][j];
-
-                  // Highlight row/column if hormone selected
-                  let bgClass = 'bg-slate-900/50';
-                  if (isSelected && rel.strength > 0) {
-                    bgClass = 'bg-blue-500/20';
-                  } else if (isHovered) {
-                    bgClass = 'bg-slate-700/50';
-                  } else if (selectedHormone && (h1 === selectedHormone || h2 === selectedHormone)) {
-                    bgClass = 'bg-slate-800';
-                  }
-
-                  return (
-                    <div
-                      key={h2}
-                      className={`aspect-square ${bgClass} rounded flex items-center justify-center cursor-help transition-all`}
-                      style={{
-                        backgroundColor: rel.strength > 0 ? getRelationshipColor(rel.relationship, rel.strength) : undefined,
-                        gridColumn: j + 2
-                      }}
-                      onMouseEnter={() => setHoveredCell({ h1: i, h2: j })}
-                      onMouseLeave={() => setHoveredCell(null)}
-                      title={rel.description || `${getFullName(h1)} & ${getFullName(h2)}`}
-                    >
-                      {rel.strength > 0 && (
-                        <span className="text-sm" style={{ opacity: 0.5 + rel.strength * 0.5 }}>
-                          {getRelationshipIcon(rel.relationship)}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
+                {hormones.map((h2, j) => (
+                  <CorrelationCell
+                    key={h2}
+                    h1={h1}
+                    h2={h2}
+                    rel={HORMONE_RELATIONSHIPS[i][j]}
+                    selectedHormone={selectedHormone}
+                    isHovered={hoveredCell?.h1 === i && hoveredCell?.h2 === j}
+                    onHover={() => handleCellHover(i, j)}
+                    onLeave={handleCellLeave}
+                    value1={currentValues[h1] || 0}
+                    value2={currentValues[h2] || 0}
+                  />
+                ))}
               </div>
             ))}
           </div>
@@ -246,35 +327,32 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-            {hormones
-              .map((h, idx) => ({ hormone: h, rel: HORMONE_RELATIONSHIPS[hormones.indexOf(selectedHormone)][idx] }))
-              .filter(({ rel }) => rel.strength > 0)
-              .map(({ hormone, rel }) => (
-                <div
-                  key={hormone}
-                  className={`p-2 rounded ${
+            {selectedRelationships.map(({ hormone, rel }) => (
+              <div
+                key={hormone}
+                className={`p-2 rounded ${
+                  rel.relationship === 'synergistic'
+                    ? 'bg-green-500/10 border border-green-500/30'
+                    : rel.relationship === 'antagonistic'
+                    ? 'bg-red-500/10 border border-red-500/30'
+                    : 'bg-yellow-500/10 border border-yellow-500/30'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium text-white">{getFullName(hormone)}</span>
+                  <span className={`font-medium ${
                     rel.relationship === 'synergistic'
-                      ? 'bg-green-500/10 border border-green-500/30'
+                      ? 'text-green-400'
                       : rel.relationship === 'antagonistic'
-                      ? 'bg-red-500/10 border border-red-500/30'
-                      : 'bg-yellow-500/10 border border-yellow-500/30'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-white">{getFullName(hormone)}</span>
-                    <span className={`font-medium ${
-                      rel.relationship === 'synergistic'
-                        ? 'text-green-400'
-                        : rel.relationship === 'antagonistic'
-                        ? 'text-red-400'
-                        : 'text-yellow-400'
-                    }`}>
-                      {rel.relationship.charAt(0).toUpperCase() + rel.relationship.slice(1)}
-                    </span>
-                  </div>
-                  <p className="text-slate-400">{rel.description}</p>
+                      ? 'text-red-400'
+                      : 'text-yellow-400'
+                  }`}>
+                    {rel.relationship.charAt(0).toUpperCase() + rel.relationship.slice(1)}
+                  </span>
                 </div>
-              ))}
+                <p className="text-slate-400">{rel.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
