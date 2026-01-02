@@ -4,13 +4,21 @@
 
 import { memo, useState, useMemo, useCallback } from 'react';
 import { useSimulationStore } from '../../state/store';
+import { selectHormoneHistory } from '../../state/selectors';
 import { HORMONE_EDUCATION } from '../../data/hormoneEducation';
 import HormoneTooltip from '../ui/HormoneTooltip';
+import {
+  calculatePearsonCorrelation,
+  classifyCorrelation,
+  getCorrelationDescription,
+  calculateCorrelationMatrix,
+} from '../../utils/correlation';
 
 interface CorrelationData {
   relationship: 'synergistic' | 'antagonistic' | 'permissive' | 'neutral';
   strength: number; // 0-1
   description: string;
+  actualCorrelation?: number; // Calculated from historical data
 }
 
 // Define hormone relationships as a 2D array
@@ -148,6 +156,7 @@ const CorrelationCell = memo(function CorrelationCell({
   onLeave,
   value1,
   value2,
+  showActual,
 }: {
   h1: string;
   h2: string;
@@ -158,11 +167,36 @@ const CorrelationCell = memo(function CorrelationCell({
   onLeave: () => void;
   value1: number;
   value2: number;
+  showActual: boolean;
 }) {
   const isSelected = selectedHormone === h1 || selectedHormone === h2;
 
   let bgClass = 'bg-slate-900/50';
-  if (isSelected && rel.strength > 0) {
+  let bgColor: string | undefined;
+  let icon: string | null = null;
+  let opacity = 1;
+
+  if (showActual && rel.actualCorrelation !== undefined) {
+    // Show actual correlation
+    const { strength, direction } = classifyCorrelation(rel.actualCorrelation);
+    const alpha = 0.2 + Math.abs(rel.actualCorrelation) * 0.6;
+
+    if (direction === 'positive') {
+      bgColor = `rgba(34, 197, 94, ${alpha})`; // green
+      icon = direction === 'positive' ? '+' : '-';
+    } else if (direction === 'negative') {
+      bgColor = `rgba(239, 68, 68, ${alpha})`; // red
+    }
+
+    opacity = 0.3 + Math.abs(rel.actualCorrelation) * 0.7;
+  } else if (rel.strength > 0) {
+    // Show theoretical relationship
+    bgColor = getRelationshipColor(rel.relationship, rel.strength);
+    icon = getRelationshipIcon(rel.relationship);
+    opacity = 0.5 + rel.strength * 0.5;
+  }
+
+  if (isSelected && (rel.strength > 0 || rel.actualCorrelation !== undefined)) {
     bgClass = 'bg-blue-500/20';
   } else if (isHovered) {
     bgClass = 'bg-slate-700/50';
@@ -170,20 +204,27 @@ const CorrelationCell = memo(function CorrelationCell({
     bgClass = 'bg-slate-800';
   }
 
+  const title = showActual && rel.actualCorrelation !== undefined
+    ? getCorrelationDescription(getShortName(h1), getShortName(h2), rel.actualCorrelation)
+    : rel.description || `${getFullName(h1)} & ${getFullName(h2)}`;
+
   return (
     <HormoneTooltip hormoneId={h2} currentValue={value2}>
       <div
         className={`aspect-square ${bgClass} rounded flex items-center justify-center cursor-help transition-all`}
-        style={{
-          backgroundColor: rel.strength > 0 ? getRelationshipColor(rel.relationship, rel.strength) : undefined,
-        }}
+        style={{ backgroundColor: bgColor }}
         onMouseEnter={onHover}
         onMouseLeave={onLeave}
-        title={rel.description || `${getFullName(h1)} & ${getFullName(h2)}`}
+        title={title}
       >
-        {rel.strength > 0 && (
-          <span className="text-sm" style={{ opacity: 0.5 + rel.strength * 0.5 }}>
-            {getRelationshipIcon(rel.relationship)}
+        {(rel.strength > 0 || rel.actualCorrelation !== undefined) && (
+          <span className="text-sm" style={{ opacity }}>
+            {icon || getRelationshipIcon(rel.relationship)}
+          </span>
+        )}
+        {showActual && rel.actualCorrelation !== undefined && (
+          <span className="absolute text-[10px] bottom-0.5 right-0.5 opacity-70">
+            {rel.actualCorrelation > 0 ? '+' : ''}{rel.actualCorrelation.toFixed(2)}
           </span>
         )}
       </div>
@@ -193,8 +234,10 @@ const CorrelationCell = memo(function CorrelationCell({
 
 const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
   const { state } = useSimulationStore();
+  const hormoneHistory = useSimulationStore(selectHormoneHistory);
   const [selectedHormone, setSelectedHormone] = useState<string | null>(null);
   const [hoveredCell, setHoveredCell] = useState<{ h1: number; h2: number } | null>(null);
+  const [showActualCorrelations, setShowActualCorrelations] = useState(false);
 
   const currentValues = useMemo(() => {
     if (!state?.hormones) return {};
@@ -208,14 +251,52 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
     return values;
   }, [state?.hormones]);
 
+  // Calculate actual correlations from historical data
+  const actualCorrelations = useMemo(() => {
+    if (!hormoneHistory || showActualCorrelations === false) return {};
+
+    // Build data arrays for each hormone
+    const dataArrays: Record<string, number[]> = {};
+    const maxLength = Math.max(...Object.values(hormoneHistory).map(h => h.length), 0);
+
+    if (maxLength < 3) return {}; // Need at least 3 data points
+
+    hormones.forEach(h => {
+      const history = hormoneHistory[h] || [];
+      dataArrays[h] = history;
+    });
+
+    return calculateCorrelationMatrix(dataArrays);
+  }, [hormoneHistory, showActualCorrelations]);
+
+  // Enhanced relationships with actual correlations
+  const enhancedRelationships = useMemo(() => {
+    const enhanced: CorrelationData[][] = HORMONE_RELATIONSHIPS.map(row =>
+      row.map(cell => ({ ...cell }))
+    );
+
+    if (showActualCorrelations && actualCorrelations) {
+      hormones.forEach((h1, i) => {
+        hormones.forEach((h2, j) => {
+          const actual = actualCorrelations[h1]?.[h2];
+          if (actual !== undefined) {
+            enhanced[i][j].actualCorrelation = actual;
+          }
+        });
+      });
+    }
+
+    return enhanced;
+  }, [showActualCorrelations, actualCorrelations]);
+
   // Memoize filtered relationships for selected hormone to avoid recalculation
   const selectedRelationships = useMemo(() => {
     if (!selectedHormone) return [];
     const selectedIndex = hormones.indexOf(selectedHormone);
     return hormones
-      .map((h, idx) => ({ hormone: h, rel: HORMONE_RELATIONSHIPS[selectedIndex][idx] }))
-      .filter(({ rel }) => rel.strength > 0);
-  }, [selectedHormone]);
+      .map((h, idx) => ({ hormone: h, rel: enhancedRelationships[selectedIndex][idx] }))
+      .filter(({ rel }) => rel.strength > 0 || (showActualCorrelations && rel.actualCorrelation !== undefined));
+  }, [selectedHormone, enhancedRelationships, showActualCorrelations]);
 
   // Use useCallback for event handlers to prevent recreation
   const handleToggleHormone = useCallback((hormone: string) => {
@@ -232,23 +313,57 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
 
   return (
     <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
         <h2 className="text-lg font-semibold text-white">Hormone Correlation Matrix</h2>
-        <div className="flex gap-4 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500" />
-            <span className="text-slate-400">Synergistic</span>
+        <div className="flex items-center gap-4">
+          {/* Toggle between theoretical and actual correlations */}
+          <div className="flex items-center gap-2 bg-slate-900 rounded-lg px-3 py-1.5">
+            <span className="text-xs text-slate-400">Theoretical</span>
+            <button
+              onClick={() => setShowActualCorrelations(!showActualCorrelations)}
+              className={`w-10 h-5 rounded-full transition-colors ${
+                showActualCorrelations ? 'bg-blue-600' : 'bg-slate-600'
+              }`}
+              aria-pressed={showActualCorrelations}
+              aria-label="Toggle actual correlations"
+            >
+              <div
+                className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                  showActualCorrelations ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+            <span className="text-xs text-slate-300">Actual Data</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-500" />
-            <span className="text-slate-400">Antagonistic</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-yellow-500" />
-            <span className="text-slate-400">Permissive</span>
+
+          <div className="flex gap-4 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-green-500" />
+              <span className="text-slate-400">Synergistic</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-red-500" />
+              <span className="text-slate-400">Antagonistic</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-yellow-500" />
+              <span className="text-slate-400">Permissive</span>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Info text about current mode */}
+      {showActualCorrelations && (
+        <div className="mb-4 p-2 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-300">
+          Showing actual correlations calculated from your hormone history data.
+          {Object.keys(actualCorrelations).length < hormones.length && (
+            <span className="block mt-1 text-blue-400">
+              Collecting more data points will improve accuracy...
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Current values row */}
       <div className="mb-4 flex flex-wrap gap-2">
@@ -297,13 +412,14 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
                     key={h2}
                     h1={h1}
                     h2={h2}
-                    rel={HORMONE_RELATIONSHIPS[i][j]}
+                    rel={enhancedRelationships[i][j]}
                     selectedHormone={selectedHormone}
                     isHovered={hoveredCell?.h1 === i && hoveredCell?.h2 === j}
                     onHover={() => handleCellHover(i, j)}
                     onLeave={handleCellLeave}
                     value1={currentValues[h1] || 0}
                     value2={currentValues[h2] || 0}
+                    showActual={showActualCorrelations}
                   />
                 ))}
               </div>
@@ -359,7 +475,18 @@ const HormoneCorrelationMatrix = memo(function HormoneCorrelationMatrix() {
 
       {/* Legend */}
       <div className="mt-4 text-xs text-slate-500">
-        <p>Click on a hormone to see its relationships. Hover over cells for details. Darker colors indicate stronger relationships.</p>
+        {showActualCorrelations ? (
+          <p>
+            Showing Pearson correlation coefficients calculated from your hormone history.
+            Click on a hormone to see its relationships. Values range from -1 (strong negative) to +1 (strong positive).
+          </p>
+        ) : (
+          <p>
+            Showing theoretical hormone relationships based on physiological knowledge.
+            Toggle to "Actual Data" to see correlations calculated from your hormone history.
+            Click on a hormone to see its relationships. Hover over cells for details.
+          </p>
+        )}
       </div>
     </div>
   );
