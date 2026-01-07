@@ -122,18 +122,21 @@ const SupplementTracker = memo(function SupplementTracker({ onSupplementLogged }
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-1 overflow-x-auto pb-2">
+        <div className="flex gap-1 overflow-x-auto pb-2" role="tablist" aria-label="Supplement categories">
           {SUPPLEMENT_CATEGORIES.map(cat => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
+              role="tab"
+              aria-selected={selectedCategory === cat.id}
+              aria-label={`Show ${cat.name} supplements`}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === cat.id
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:bg-slate-700 hover:text-white'
               }`}
             >
-              <span className="mr-1">{cat.icon}</span>
+              <span className="mr-1" aria-hidden="true">{cat.icon}</span>
               {cat.name}
             </button>
           ))}
@@ -151,11 +154,20 @@ const SupplementTracker = memo(function SupplementTracker({ onSupplementLogged }
 
       <div className="p-4">
         {/* Supplement Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4" role="listbox" aria-label="Available supplements">
           {filteredSupplements.slice(0, 6).map(supplement => (
             <div
               key={supplement.id}
               onClick={() => setSelectedSupplement(supplement)}
+              role="option"
+              aria-selected={selectedSupplement?.id === supplement.id}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedSupplement(supplement);
+                }
+              }}
               className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                 selectedSupplement?.id === supplement.id
                   ? 'border-blue-500 bg-blue-500/10'
@@ -205,6 +217,7 @@ const SupplementTracker = memo(function SupplementTracker({ onSupplementLogged }
               </div>
               <button
                 onClick={() => setSelectedSupplement(null)}
+                aria-label="Close supplement details"
                 className="text-slate-400 hover:text-white"
               >
                 ×
@@ -324,7 +337,7 @@ const SupplementTracker = memo(function SupplementTracker({ onSupplementLogged }
                     <button
                       onClick={() => handleRemoveSupplement(logged.id)}
                       className="text-slate-400 hover:text-red-400 p-1"
-                      title="Remove"
+                      aria-label={`Remove ${supplement.name} from log`}
                     >
                       ×
                     </button>
